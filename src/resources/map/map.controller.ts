@@ -20,6 +20,7 @@ export async function getMap(req: Request, res: Response, next: NextFunction) {
     const cachedPeriod = cache.get(`period ${year}`);
 
     if (cachedPeriod) {
+      console.log("got year from cache");
       targetYear = cachedPeriod;
     } else {
       const periods = await Map.find()
@@ -35,6 +36,7 @@ export async function getMap(req: Request, res: Response, next: NextFunction) {
 
     const cachedData = cache.get(`map ${targetYear}`);
     if (cachedData) {
+      console.log("got year from cache");
       return res.status(200).json(cachedData);
     }
 

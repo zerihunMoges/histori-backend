@@ -19,7 +19,8 @@
         "express": "^4.18.2",
         "memory-cache": "^0.2.0",
         "mongoose": "^8.1.1",
-        "mysql2": "^3.3.3"
+        "mysql2": "^3.3.3",
+        "node-cache": "^5.1.2"
     },
     "devDependencies": {
         "@types/async-lock": "^1.4.0",
