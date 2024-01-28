@@ -2,7 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import { Map } from "./map.model";
 import NodeCache from "node-cache";
 const cache = new NodeCache({
+  deleteOnExpire: true,
   maxKeys: 100,
+  stdTTL: 600,
 });
 
 export async function getMap(req: Request, res: Response, next: NextFunction) {
