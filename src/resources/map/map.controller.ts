@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { Map } from "./map.model";
-import cache from "memory-cache";
-import { json } from "body-parser";
+import NodeCache from "node-cache";
+const cache = new NodeCache({
+  maxKeys: 100,
+});
 
 export async function getMap(req: Request, res: Response, next: NextFunction) {
   let { period } = req.query;
@@ -18,7 +20,7 @@ export async function getMap(req: Request, res: Response, next: NextFunction) {
       return res.status(400).json({ message: "Invalid period parameter" });
     }
 
-    const cachedPeriod = cache.get(`period ${year}`);
+    const cachedPeriod: number = cache.get(`period ${year}`);
 
     if (cachedPeriod) {
       console.log("got year from cache");
@@ -32,7 +34,7 @@ export async function getMap(req: Request, res: Response, next: NextFunction) {
       const targetPeriod = findClosestPeriod(year, periods);
       targetYear = targetPeriod;
 
-      cache.put(`period ${year}`, targetYear, 10000);
+      cache.set(`period ${year}`, targetYear, 10000);
     }
 
     const cachedData = cache.get(`map ${targetYear}`);
@@ -43,7 +45,7 @@ export async function getMap(req: Request, res: Response, next: NextFunction) {
 
     const mapData = await Map.findOne({ period: targetYear });
 
-    cache.put(`map ${targetYear}`, mapData, 10000);
+    cache.set(`map ${targetYear}`, mapData, 10000);
 
     return res.status(200).json(mapData);
   } catch (err) {
