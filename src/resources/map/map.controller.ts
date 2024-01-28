@@ -7,6 +7,7 @@ export async function getMap(req: Request, res: Response, next: NextFunction) {
   let { period } = req.query;
 
   try {
+    console.log("request for ", period);
     if (typeof period !== "string") {
       return res.status(400).json({ message: "invalid period parameter" });
     }
