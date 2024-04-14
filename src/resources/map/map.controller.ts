@@ -35,34 +35,38 @@ async function fetchMapData(year) {
 }
 
 // Express route handler
-// export async function getMap(req, res, next) {
-//   const { period } = req.query;
+export async function getMap(req, res, next) {
+  const { period } = req.query;
 
-//   try {
-//     if (typeof period !== "string") {
-//       return res.status(400).json({ message: "Invalid period parameter" });
-//     }
+  try {
+    if (typeof period !== "string") {
+      return res.status(400).json({ message: "Invalid period parameter" });
+    }
 
-//     const year = parseInt(period);
-//     if (isNaN(year)) {
-//       return res.status(400).json({ message: "Invalid period parameter" });
-//     }
+    const year = parseInt(period);
+    if (isNaN(year)) {
+      return res.status(400).json({ message: "Invalid period parameter" });
+    }
 
-//     console.log("Request for year:", year);
+    console.log("Request for year:", year);
 
-//     // Fetch map data from cache or database
-//     const mapData = await fetchMapData(year);
+    // Fetch map data from cache or database
+    const mapData = await fetchMapData(year);
 
-//     return res
-//       .status(200)
-//       .json({ type: "FeatureCollection", name: year, features: mapData });
-//   } catch (err) {
-//     console.error(err);
-//     return res.status(500).json({ message: "Internal server error" });
-//   }
-// }
+    return res
+      .status(200)
+      .json({ type: "FeatureCollection", name: year, features: mapData });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
 
-export async function getMap(req: Request, res: Response, next: NextFunction) {
+export async function getTempMap(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   let { period } = req.query;
 
   try {
