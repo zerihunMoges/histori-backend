@@ -84,7 +84,7 @@ export async function getTempMap(
     // Check if data is cached
     const cachedData = cache.get(cacheKey);
     if (cachedData) {
-      return res.status(200).json(cachedData);
+      return res.status(200).json(JSON.parse(cachedData as string));
     }
 
     // If data is not cached, fetch it from the database
@@ -96,7 +96,7 @@ export async function getTempMap(
     });
 
     // Cache the data for future requests
-    cache.set(cacheKey, mapData);
+    cache.set(cacheKey, JSON.stringify(mapData));
 
     return res.status(200).json(mapData);
   } catch (err) {
