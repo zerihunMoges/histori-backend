@@ -65,7 +65,6 @@ const MapSchema: Schema = new Schema({
   },
   endPeriod: {
     type: Number,
-    required: true,
   },
   properties: {
     type: Schema.Types.ObjectId,
@@ -79,6 +78,25 @@ const MapSchema: Schema = new Schema({
   },
 });
 
-const Map = mongoose.model<IMap>("Map", MapSchema);
+interface ITempMap extends Document {
+  startPeriod: number;
+  endPeriod: number;
+  map: any;
+}
 
-export { Map, Properties, Geometry };
+const TempMapSchema: Schema = new Schema({
+  startPeriod: {
+    type: Number,
+    required: true,
+  },
+  endPeriod: {
+    type: Number,
+  },
+  map: {
+    type: Schema.Types.Mixed,
+  },
+});
+
+const Map = mongoose.model<IMap>("Map", MapSchema);
+const TempMap = mongoose.model<ITempMap>("TempMap", TempMapSchema);
+export { Map, TempMap, Properties, Geometry };

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { Map } from "./map.model";
+import { Map, TempMap } from "./map.model";
 import NodeCache from "node-cache";
 import { Redis } from "ioredis";
 const cache = new NodeCache({
@@ -35,75 +35,23 @@ async function fetchMapData(year) {
 }
 
 // Express route handler
-export async function getMap(req, res, next) {
-  const { period } = req.query;
-
-  try {
-    if (typeof period !== "string") {
-      return res.status(400).json({ message: "Invalid period parameter" });
-    }
-
-    const year = parseInt(period);
-    if (isNaN(year)) {
-      return res.status(400).json({ message: "Invalid period parameter" });
-    }
-
-    console.log("Request for year:", year);
-
-    // Fetch map data from cache or database
-    const mapData = await fetchMapData(year);
-
-    return res
-      .status(200)
-      .json({ type: "FeatureCollection", name: year, features: mapData });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-}
-
-// export async function getMap(req: Request, res: Response, next: NextFunction) {
-//   let { period } = req.query;
+// export async function getMap(req, res, next) {
+//   const { period } = req.query;
 
 //   try {
-//     console.log("request for ", period);
 //     if (typeof period !== "string") {
-//       return res.status(400).json({ message: "invalid period parameter" });
+//       return res.status(400).json({ message: "Invalid period parameter" });
 //     }
-//     let targetYear: number | null;
-//     const year = parseInt(period as string);
+
+//     const year = parseInt(period);
 //     if (isNaN(year)) {
 //       return res.status(400).json({ message: "Invalid period parameter" });
 //     }
-//     // const cachedPeriod: number = cache.get(`period ${year}`);
-//     // if (cachedPeriod) {
-//     //   console.log("got year from cache");
-//     //   targetYear = cachedPeriod;
-//     // } else {
-//     //   const periods = await Map.find()
-//     //     .select("period")
-//     //     .then((periods) => periods.map((period) => period.period));
-//     //   periods.sort((a, b) => a - b);
-//     //   const targetPeriod = findClosestPeriod(year, periods);
-//     //   targetYear = targetPeriod;
-//     //   cache.set(`period ${year}`, targetYear, 10000);
-//     // }
-//     // const cachedData = cache.get(`map ${targetYear}`);
-//     // if (cachedData) {
-//     //   console.log("got year from cache");
-//     //   return res.status(200).json(cachedData);
-//     // }
-//     // const mapData = await Map.findOne({ period: targetYear });
-//     // cache.set(`map ${targetYear}`, mapData, 10000);
 
-//     const mapData = await Map.find({
-//       $or: [
-//         { startPeriod: { $lte: year }, endPeriod: { $gte: year } },
-//         { startPeriod: { $lte: year }, endPeriod: null },
-//       ],
-//     })
-//       .populate("properties")
-//       .populate("geometry");
+//     console.log("Request for year:", year);
+
+//     // Fetch map data from cache or database
+//     const mapData = await fetchMapData(year);
 
 //     return res
 //       .status(200)
@@ -113,6 +61,45 @@ export async function getMap(req, res, next) {
 //     return res.status(500).json({ message: "Internal server error" });
 //   }
 // }
+
+export async function getMap(req: Request, res: Response, next: NextFunction) {
+  let { period } = req.query;
+
+  try {
+    console.log("request for ", period);
+    if (typeof period !== "string") {
+      return res.status(400).json({ message: "invalid period parameter" });
+    }
+    let targetYear: number | null;
+    const year = parseInt(period as string);
+    if (isNaN(year)) {
+      return res.status(400).json({ message: "Invalid period parameter" });
+    }
+    const cacheKey = `map:${year}`;
+
+    // Check if data is cached
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(cachedData);
+    }
+
+    // If data is not cached, fetch it from the database
+    const mapData = await TempMap.findOne({
+      $or: [
+        { startPeriod: { $lte: year }, endPeriod: { $gte: year } },
+        { startPeriod: { $lte: year }, endPeriod: null || undefined },
+      ],
+    });
+
+    // Cache the data for future requests
+    cache.set(cacheKey, mapData);
+
+    return res.status(200).json(mapData);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
 
 function findClosestPeriod(target: number, periods: number[]) {
   // Binary search for the closest period
