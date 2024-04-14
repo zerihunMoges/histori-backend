@@ -79,7 +79,7 @@ export async function getTempMap(
     if (isNaN(year)) {
       return res.status(400).json({ message: "Invalid period parameter" });
     }
-    const cacheKey = `map:${year}`;
+    const cacheKey = `tmap:${year}`;
 
     // Check if data is cached
     const cachedData = cache.get(cacheKey);
