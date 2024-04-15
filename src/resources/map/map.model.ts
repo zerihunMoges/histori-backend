@@ -12,7 +12,6 @@ interface IProperties extends Document {
 const PropertiesSchema: Schema = new Schema({
   NAME: {
     type: String,
-    required: true,
     // unique: true, // Ensure uniqueness of NAME
   },
   ABBREVN: {
@@ -40,11 +39,10 @@ interface IGeometry extends Document {
 const GeometrySchema: Schema = new Schema({
   type: {
     type: String,
-    required: true,
+    default: "Polygon",
   },
   coordinates: {
     type: Schema.Types.Mixed,
-    required: true,
   },
 });
 
@@ -59,6 +57,10 @@ interface IMap extends Document {
 }
 
 const MapSchema: Schema = new Schema({
+  type: {
+    type: String,
+    default: "Feature",
+  },
   startPeriod: {
     type: Number,
     required: true,
@@ -74,7 +76,6 @@ const MapSchema: Schema = new Schema({
   geometry: {
     type: Schema.Types.ObjectId,
     ref: "Geometry",
-    required: true,
   },
 });
 

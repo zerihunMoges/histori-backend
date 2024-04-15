@@ -74,31 +74,31 @@ async function processGeoJSONFile(filePath, startYear, endYear) {
   try {
     // Read GeoJSON file
     const geojson = JSON.parse(fs.readFileSync(filePath, "utf8"));
-    await TempMap.create({
-      startPeriod: startYear,
-      endPeriod: endYear,
-      map: geojson,
-    });
+    // await TempMap.create({
+    //   startPeriod: startYear,
+    //   endPeriod: endYear,
+    //   map: geojson,
+    // });
 
-    console.log(`Map created for ${startYear}-${endYear}`);
+    // console.log(`Map created for ${startYear}-${endYear}`);
     // Process each feature in the GeoJSON
-    // for (const feature of geojson.features) {
-    //   // Update or create Properties document
-    //   const properties = await Properties.create(feature.properties);
+    for (const feature of geojson.features) {
+      // Update or create Properties document
+      const properties = await Properties.create(feature.properties);
 
-    //   // Create Geometry document
-    //   const geometry = await Geometry.create(feature.geometry);
+      // Create Geometry document
+      const geometry = await Geometry.create(feature.geometry);
 
-    //   // Create Map document
-    //   await Map.create({
-    //     startPeriod: startYear,
-    //     endPeriod: endYear,
-    //     properties: properties._id,
-    //     geometry: geometry._id,
-    //   });
+      // Create Map document
+      await Map.create({
+        startPeriod: startYear,
+        endPeriod: endYear,
+        properties: properties._id,
+        geometry: geometry._id,
+      });
 
-    //   console.log(`Map created for ${startYear}-${endYear}`);
-    // }
+      console.log(`Map created for ${startYear}-${endYear}`);
+    }
   } catch (error) {
     console.error(`Error processing GeoJSON file ${filePath}: ${error}`);
   }

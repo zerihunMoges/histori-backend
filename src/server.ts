@@ -7,6 +7,7 @@ import { config } from "../config";
 import mapRouter from "./resources/map/map.route";
 import compression from "compression";
 import scriptRouter from "./scripts/auto_populate";
+import userRouter from "./resources/user/user.route";
 
 const app = express();
 app.use(express.json());
@@ -15,7 +16,7 @@ app.use(cors({ origin: true }));
 
 app.use("/api/map", mapRouter);
 app.use("/api/script", scriptRouter);
-
+app.use("/api/users", userRouter);
 export const start = async () => {
   try {
     await connectDB();
