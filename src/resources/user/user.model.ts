@@ -10,7 +10,7 @@ export interface IUserInterface {
   role: String;
 }
 interface userModel extends Model<IUserInterface> {
-  signup(firstName, lastName, email, phoneNUmber, password): any;
+  signup(firstName, lastName, email, phoneNUmber, password, role?): any;
   login(email, password): any;
 }
 const userSchema = new mongoose.Schema({
@@ -47,7 +47,8 @@ userSchema.statics.signup = async function (
   lastName,
   email,
   phoneNumber,
-  password
+  password,
+  role = "user"
 ) {
   const exists = await this.findOne({ email });
 
@@ -64,6 +65,7 @@ userSchema.statics.signup = async function (
     email,
     phoneNumber,
     password: hash,
+    role,
   });
 
   return user;

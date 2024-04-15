@@ -25,15 +25,19 @@ export const loginUser = async (req: Request, res: Response) => {
 
 //sign up
 export const registerUser = async (req: Request, res: Response) => {
-  const { firstName, lastName, email, phoneNumber, password } = req.body;
+  const { firstName, lastName, email, phoneNumber, password, role } = req.body;
 
   try {
+    if (role !== "user" || role !== "contributor") {
+      res.status(400).json({ message: "Invalid role" });
+    }
     const user = await User.signup(
       firstName,
       lastName,
       email,
       phoneNumber,
-      password
+      password,
+      role
     );
 
     //create a token
@@ -43,6 +47,7 @@ export const registerUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 //fetch all users
 export const fetchAllUsers = async (
   req: Request,
