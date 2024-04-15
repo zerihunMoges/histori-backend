@@ -23,7 +23,8 @@
         "memory-cache": "^0.2.0",
         "mongoose": "^8.1.1",
         "mysql2": "^3.3.3",
-        "node-cache": "^5.1.2"
+        "node-cache": "^5.1.2",
+        "openai": "^4.33.0"
     },
     "devDependencies": {
         "@types/async-lock": "^1.4.0",

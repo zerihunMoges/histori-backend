@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { getHistories } from "./history.controller";
+import { getHistories, createHistories } from "./history.controller";
 
 const historyRouter = Router();
 historyRouter.get("", getHistories);
+historyRouter.post("", createHistories);
 
 export default historyRouter;
