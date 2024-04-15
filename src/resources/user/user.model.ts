@@ -8,6 +8,7 @@ export interface IUserInterface {
   phoneNumber: String;
   password: String;
   role: String;
+  points: Number;
 }
 interface userModel extends Model<IUserInterface> {
   signup(firstName, lastName, email, phoneNUmber, password, role?): any;
@@ -38,6 +39,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     enum: ["user", "admin", "contributor"],
     default: "user",
+  },
+  points: {
+    type: Number,
+    default: 0,
   },
 });
 
