@@ -28,8 +28,8 @@ export const registerUser = async (req: Request, res: Response) => {
   const { firstName, lastName, email, phoneNumber, password, role } = req.body;
 
   try {
-    if (role !== "user" || role !== "contributor") {
-      res.status(400).json({ message: "Invalid role" });
+    if (role !== "user" && role !== "contributor") {
+      return res.status(400).json({ message: "Invalid role" });
     }
     const user = await User.signup(
       firstName,
