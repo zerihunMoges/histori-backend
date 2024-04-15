@@ -17,6 +17,8 @@ app.use(cors({ origin: true }));
 app.use("/api/map", mapRouter);
 app.use("/api/script", scriptRouter);
 app.use("/api/users", userRouter);
+app.use("/api/history", historyRouter);
+
 export const start = async () => {
   try {
     await connectDB();
