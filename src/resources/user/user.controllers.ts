@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { User, IUserInterface } from "./user.model";
 import jwt from "jsonwebtoken";
+import { config } from "../../../config";
 
 //create token
 const createToken = (_id) => {
-  return jwt.sign({ _id }, process.env.ACCESS_TOKEN_SECRET, {
+  return jwt.sign({ _id }, config.jwtSecret, {
     expiresIn: "1d",
   });
 };
