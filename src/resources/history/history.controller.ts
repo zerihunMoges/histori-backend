@@ -14,7 +14,7 @@ export async function getHistories(
   let { year, country, category, query } = req.query;
 
   if (year === undefined || typeof year !== "string" || country === undefined) {
-    return res.status(400).json({ message: "Invalid query" });
+    return res.status(400).json({ message: "You need to specify country and year" });
   }
 
   if (category === undefined) {
