@@ -1,28 +1,40 @@
 import mongoose from "mongoose";
+import { Type } from "./report.types";
+
 
 export interface IReport {
   id: mongoose.Types.ObjectId;
-  history_id: mongoose.Types.ObjectId;
+  content_id: mongoose.Types.ObjectId;
+  type: string;
   review_id: mongoose.Types.ObjectId;
   reason: string;
+  status: string;
 }
 
 const ReportSchema = new mongoose.Schema({
-  history: {
+  content_id: {
     type: mongoose.Schema.ObjectId,
-    ref: "History",
+    refPath: 'type'
+  },
+  type: {
+    type: String,
+    enum: [Type.History, Type.Map]
   },
   review: {
     type: mongoose.Schema.ObjectId,
     ref: "Review",
-    required: false,
   },
   reason: {
     type: String,
     required: [true, "Reason for report is required"],
     maxlength: [500, "Reason can not exceed 500 characters"],
     minlength: [1, "Reason can not be less than one character"],
-  }
-});
+  },
+  status: {
+    type: String,
+    enum: ["open", "claimed", "closed"],
+    default: "open",
+  },
+}, { timestamps: true });
 
 export const Report = mongoose.model<IReport>("Report", ReportSchema);
