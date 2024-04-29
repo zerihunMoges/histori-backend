@@ -1,17 +1,17 @@
 import { Router } from "express";
-import { authenticate, permit } from "../../middlewares/authentication";
-import { Role } from "../../utils/roles";
-import { createReports, getReport, getReports } from "./report.controller";
+import { createReports, deleteReport, getReport, getReports, updateReport } from "./report.controller";
 
 const reportRouter = Router();
 
 reportRouter
     .route("/")
     .get(getReports)
-    .post(authenticate, permit(Role.Admin, Role.Contributor), createReports);
+    .post(createReports);
 
 reportRouter
     .route("/:id")
-    .get(getReport);
+    .get(getReport)
+    .patch(updateReport)
+    .delete(deleteReport);
 
 export default reportRouter;

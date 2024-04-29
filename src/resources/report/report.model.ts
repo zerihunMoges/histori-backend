@@ -1,6 +1,15 @@
 import mongoose from "mongoose";
-import { Type } from "./report.types";
 
+export enum ReportType {
+  Map = "Map",
+  History = "History",
+}
+
+export enum ReportStatus {
+  Open = "open",
+  Claimed = "claimed",
+  Closed = "closed",
+}
 
 export interface IReport {
   id: mongoose.Types.ObjectId;
@@ -18,7 +27,7 @@ const ReportSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: [Type.History, Type.Map]
+    enum: [ReportType.History, ReportType.Map]
   },
   review: {
     type: mongoose.Schema.ObjectId,
@@ -32,8 +41,8 @@ const ReportSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["open", "claimed", "closed"],
-    default: "open",
+    enum: [ReportStatus.Open, ReportStatus.Claimed, ReportStatus.Closed],
+    default: ReportStatus.Open,
   },
 }, { timestamps: true });
 
