@@ -1,4 +1,3 @@
-import { ca } from "date-fns/locale";
 import mongoose from "mongoose";
 
 export interface IHistory {

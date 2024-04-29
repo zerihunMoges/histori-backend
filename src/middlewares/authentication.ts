@@ -1,7 +1,7 @@
+import { NextFunction, Request, Response } from "express";
 import JWT from "jsonwebtoken";
-import { User } from "../resources/user/user.model";
-import { Request, Response, NextFunction } from "express";
 import { config } from "../../config";
+import { User } from "../resources/user/user.model";
 
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers["authorization"];
@@ -35,7 +35,6 @@ export function permit(...allowed: string[]){
   res: Response,
   next: NextFunction) => {
     const user = res.locals.user;
-    console.log("user is: ", user, "allowed is: ", allowed, "user role is: ", user.role);
     if (user && allowed.includes(user.role)) {
       return next();
     }

@@ -1,13 +1,13 @@
-import express from "express";
-import bodyparser from "body-parser";
-import cors from "cors";
-import historyRouter from "./resources/history/history.route";
-import connectDB from "../db";
-import { config } from "../config";
-import mapRouter from "./resources/map/map.route";
 import compression from "compression";
-import scriptRouter from "./scripts/auto_populate";
+import cors from "cors";
+import express from "express";
+import { config } from "../config";
+import connectDB from "../db";
+import historyRouter from "./resources/history/history.route";
+import mapRouter from "./resources/map/map.route";
+import reportRouter from "./resources/report/report.route";
 import userRouter from "./resources/user/user.route";
+import scriptRouter from "./scripts/auto_populate";
 
 
 const app = express();
@@ -19,6 +19,7 @@ app.use(`/api/v${config.apiVersion}/map`, mapRouter);
 app.use(`/api/v${config.apiVersion}/script`, scriptRouter);
 app.use(`/api/v${config.apiVersion}/users`, userRouter);
 app.use(`/api/v${config.apiVersion}/histories`, historyRouter);
+app.use(`/api/v${config.apiVersion}/reports`, reportRouter);
 
 export const start = async () => {
   try {
