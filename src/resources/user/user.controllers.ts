@@ -4,6 +4,7 @@ import { config } from "../../../config";
 import { User } from "./user.model";
 
 //create token
+<<<<<<< HEAD
 const createToken = ({
   _id,
   firstName,
@@ -20,6 +21,10 @@ const createToken = ({
     phoneNumber,
     role
   }, config.jwt.secret, {
+=======
+const createToken = (_id) => {
+  return jwt.sign({ _id }, config.jwt.secret, {
+>>>>>>> e7cb538 (fix: Get Jwt Expiry for enviroment variables)
     expiresIn: config.jwt.expiresIn,
   });
 };
