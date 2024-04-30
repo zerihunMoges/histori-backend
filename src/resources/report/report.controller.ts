@@ -10,18 +10,20 @@ export async function getReports(
     res: Response,
     next: NextFunction
 ) {
-    let { type, start_year, end_year, country, categories } = req.query;
+    let { type, country, categories } = req.query;
+    const start_year = req.query.start_year as string;
+    const end_year = req.query.end_year as string;
 
     if (type === undefined || typeof type !== "string" || !(type in ReportType)) {
         return res.status(400).json({ message: "You need to specify a valid type" });
     }
 
-    if (start_year === undefined || typeof start_year !== "string") {
-        return res.status(400).json({ message: "You need to specify start_year" });
+    if (Number.isNaN(parseInt(start_year))) {
+        return res.status(400).json({ message: "You need to specify a valid start_year" });
     }
 
-    if (end_year === undefined || typeof end_year !== "string") {
-        return res.status(400).json({ message: "You need to specify end_year" });
+    if (Number.isNaN(parseInt(end_year))) {
+        return res.status(400).json({ message: "You need to specify a valid end_year" });
     }
 
     try {
@@ -50,6 +52,7 @@ export async function createReports(
 ) {
     try {
         const reporter_id = res.locals.user._id;
+
         let {
             content_id,
             type,
