@@ -49,6 +49,7 @@ export async function createReports(
     next: NextFunction
 ) {
     try {
+        const reporter_id = res.locals.user._id;
         let {
             content_id,
             type,
@@ -64,7 +65,7 @@ export async function createReports(
         }
 
 
-        const report = new Report({ content_id, type, reason });
+        const report = new Report({ reporter_id, content_id, type, reason });
 
         await report.save();
 

@@ -1,14 +1,12 @@
 import mongoose from "mongoose";
 import { config } from "../config";
-import fs from "fs";
-import { Map } from "../src/resources/map/map.model";
 
 mongoose.set("strictQuery", true);
 mongoose.set("autoIndex", false);
 
 export default async function connectDB() {
   try {
-    const conn = await mongoose.connect(config.dataBase, {});
+    const conn = await mongoose.connect(config.db.remote, {});
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
 

@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from "express";
-import { User, IUserInterface } from "./user.model";
+import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { config } from "../../../config";
+import { User } from "./user.model";
 
 //create token
 const createToken = (_id) => {
-  return jwt.sign({ _id }, config.jwtSecret, {
-    expiresIn: "1d",
+  return jwt.sign({ _id }, config.jwt.secret, {
+    expiresIn: config.jwt.expiresIn,
   });
 };
 //login
@@ -108,4 +108,4 @@ export const updateUser = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {};
+) => { };
