@@ -115,13 +115,18 @@ export async function updateReport(
     } = req.body
 
     try {
-        const report = await Report.findOne({ id: req.params.id });
+        const reporter_id = res.locals.user._id;
+        const report = await Report.findOne({ _id: req.params.id });
 
         if (!report)
             return res.status(400).json({ message: "There is no report with the specified id" });
 
+        if (report.reporter_id === undefined || report.reporter_id.toString() !== reporter_id.toString()) {
+            return res.status(400).json({ message: "You are not authorized to update this report" });
+        }
+
         if (report.status !== ReportStatus.Open) {
-            return res.status(400).json({ message: `This report is already  ${report.status}` });
+            return res.status(400).json({ message: `This report is already  ${report.status} and can not be updated` });
         }
 
         const updatedReport = await Report.findOneAndUpdate({ id: req.params.id }, { reason }, { new: true }).populate("content_id");
@@ -145,13 +150,18 @@ export async function deleteReport(
     } = req.body
 
     try {
+        const reporter_id = res.locals.user._id;
         const report = await Report.findOne({ id: req.params.id });
 
         if (!report)
             return res.status(400).json({ message: "There is no report with the specified id" });
 
+        if (report.reporter_id === undefined || report.reporter_id.toString() !== reporter_id.toString()) {
+            return res.status(400).json({ message: "You are not authorized to delete this report" });
+        }
+
         if (report.status !== ReportStatus.Open) {
-            return res.status(400).json({ message: `This report is already  ${report.status}` });
+            return res.status(400).json({ message: `This report is already  ${report.status} and can not be deleted` });
         }
 
         const deletedReport = await Report.deleteOne({ id: req.params.id });
