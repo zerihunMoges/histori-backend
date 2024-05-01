@@ -13,6 +13,7 @@ export enum ReportStatus {
 
 export interface IReport {
   id: mongoose.Types.ObjectId;
+  reporter_id: mongoose.Types.ObjectId;
   content_id: mongoose.Types.ObjectId;
   type: string;
   review_id: mongoose.Types.ObjectId;
@@ -21,6 +22,10 @@ export interface IReport {
 }
 
 const ReportSchema = new mongoose.Schema({
+  reporter_id: {
+    type: mongoose.Types.ObjectId,
+    ref: "User",
+  },
   content_id: {
     type: mongoose.Schema.ObjectId,
     refPath: 'type'

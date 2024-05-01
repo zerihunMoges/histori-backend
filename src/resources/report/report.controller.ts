@@ -10,18 +10,20 @@ export async function getReports(
     res: Response,
     next: NextFunction
 ) {
-    let { type, start_year, end_year, country, categories } = req.query;
+    let { type, country, categories } = req.query;
+    const start_year = req.query.start_year as string;
+    const end_year = req.query.end_year as string;
 
     if (type === undefined || typeof type !== "string" || !(type in ReportType)) {
         return res.status(400).json({ message: "You need to specify a valid type" });
     }
 
-    if (start_year === undefined || typeof start_year !== "string") {
-        return res.status(400).json({ message: "You need to specify start_year" });
+    if (Number.isNaN(parseInt(start_year))) {
+        return res.status(400).json({ message: "You need to specify a valid start_year" });
     }
 
-    if (end_year === undefined || typeof end_year !== "string") {
-        return res.status(400).json({ message: "You need to specify end_year" });
+    if (Number.isNaN(parseInt(end_year))) {
+        return res.status(400).json({ message: "You need to specify a valid end_year" });
     }
 
     try {
@@ -49,6 +51,8 @@ export async function createReports(
     next: NextFunction
 ) {
     try {
+        const reporter_id = res.locals.user._id;
+
         let {
             content_id,
             type,
@@ -64,7 +68,7 @@ export async function createReports(
         }
 
 
-        const report = new Report({ content_id, type, reason });
+        const report = new Report({ reporter_id, content_id, type, reason });
 
         await report.save();
 
@@ -111,13 +115,18 @@ export async function updateReport(
     } = req.body
 
     try {
-        const report = await Report.findOne({ id: req.params.id });
+        const reporter_id = res.locals.user._id;
+        const report = await Report.findOne({ _id: req.params.id });
 
         if (!report)
             return res.status(400).json({ message: "There is no report with the specified id" });
 
+        if (report.reporter_id === undefined || report.reporter_id.toString() !== reporter_id.toString()) {
+            return res.status(400).json({ message: "You are not authorized to update this report" });
+        }
+
         if (report.status !== ReportStatus.Open) {
-            return res.status(400).json({ message: `This report is already  ${report.status}` });
+            return res.status(400).json({ message: `This report is already  ${report.status} and can not be updated` });
         }
 
         const updatedReport = await Report.findOneAndUpdate({ id: req.params.id }, { reason }, { new: true }).populate("content_id");
@@ -141,13 +150,18 @@ export async function deleteReport(
     } = req.body
 
     try {
+        const reporter_id = res.locals.user._id;
         const report = await Report.findOne({ id: req.params.id });
 
         if (!report)
             return res.status(400).json({ message: "There is no report with the specified id" });
 
+        if (report.reporter_id === undefined || report.reporter_id.toString() !== reporter_id.toString()) {
+            return res.status(400).json({ message: "You are not authorized to delete this report" });
+        }
+
         if (report.status !== ReportStatus.Open) {
-            return res.status(400).json({ message: `This report is already  ${report.status}` });
+            return res.status(400).json({ message: `This report is already  ${report.status} and can not be deleted` });
         }
 
         const deletedReport = await Report.deleteOne({ id: req.params.id });

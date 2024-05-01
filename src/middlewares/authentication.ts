@@ -9,7 +9,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 
   if (token !== undefined) {
     try {
-      const payload = JWT.verify(token, config.jwtSecret);
+      const payload = JWT.verify(token, config.jwt.secret);
       const _id = JSON.parse(JSON.stringify(payload));
 
       const user = await User.findById(_id);
