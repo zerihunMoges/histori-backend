@@ -72,7 +72,7 @@ export async function createReports(
 
         await report.save();
 
-        const populatedReport = await Report.findOne({ _id: report._id }).populate("content_id");
+        const populatedReport = await Report.findById(report._id).populate("content_id");
 
         res.status(201).json(populatedReport);
 
@@ -92,7 +92,7 @@ export async function getReport(
     next: NextFunction
 ) {
     try {
-        const report = await Report.findOne({ id: req.params.id }).populate("content_id");
+        const report = await Report.findById(req.params.id).populate("content_id");
 
         if (!report)
             return res.status(400).json({ message: "There is no report with the specified id" });
@@ -116,7 +116,7 @@ export async function updateReport(
 
     try {
         const reporter_id = res.locals.user._id;
-        const report = await Report.findOne({ _id: req.params.id });
+        const report = await Report.findById(req.params.id);
 
         if (!report)
             return res.status(400).json({ message: "There is no report with the specified id" });
@@ -151,7 +151,7 @@ export async function deleteReport(
 
     try {
         const reporter_id = res.locals.user._id;
-        const report = await Report.findOne({ id: req.params.id });
+        const report = await Report.findById(req.params.id);
 
         if (!report)
             return res.status(400).json({ message: "There is no report with the specified id" });
