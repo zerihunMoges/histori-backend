@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ConflictError } from "../../core/ApiError";
 
 export interface IClaim {
     _id: mongoose.Types.ObjectId;
@@ -41,7 +42,7 @@ ClaimSchema.pre("save", function (next) {
     Claim.findById(this._id)
         .then(existingClaim => {
             if (existingClaim) {
-                next(new Error('This user already has an active claim.'));
+                throw new ConflictError('This user already has an active claim.');
             } else {
                 this.due_date = calculateDueDate();
                 next();
