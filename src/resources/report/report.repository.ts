@@ -44,7 +44,7 @@ export async function getHistoryReports({ start_year, end_year, country, categor
 
 export async function updateReportStatus({ report_id, status }) {
     try {
-        const report = await Report.findOneAndUpdate({ id: report_id }, { status });
+        const report = await Report.findByIdAndUpdate(report_id, { status });
 
         if (!report)
             throw new NotFoundError("There is no report with the specified id");
