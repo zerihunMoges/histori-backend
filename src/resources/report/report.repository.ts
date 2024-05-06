@@ -1,5 +1,5 @@
+import { InternalError, NotFoundError } from "../../core/ApiError";
 import { Report } from "./report.model";
-
 
 export async function getHistoryReports({ start_year, end_year, country, categories }) {
     try {
@@ -38,7 +38,7 @@ export async function getHistoryReports({ start_year, end_year, country, categor
 
         return reports
     } catch (error) {
-        throw Error(error)
+        throw new InternalError(error)
     }
 }
 
@@ -47,10 +47,10 @@ export async function updateReportStatus({ report_id, status }) {
         const report = await Report.findOneAndUpdate({ id: report_id }, { status });
 
         if (!report)
-            throw Error("There is no report with the specified id");
+            throw new NotFoundError("There is no report with the specified id");
 
         return report;
     } catch (error) {
-        throw Error(error)
+        throw new InternalError(error)
     }
 }

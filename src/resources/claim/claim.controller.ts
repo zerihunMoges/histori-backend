@@ -1,4 +1,6 @@
 import { NextFunction, Request, Response } from "express";
+import { NotFoundError } from "../../core/ApiError";
+import { handleErrorResponse } from "../../helpers/errorHandle";
 import { Report, ReportStatus } from "../report/report.model";
 import { updateReportStatus } from "../report/report.repository";
 import { Claim, calculateDueDate } from "./claim.model";
@@ -14,7 +16,7 @@ export async function createClaims(
 
         const report = await Report.findById(report_id);
         if (!report)
-            return res.status(400).json({ message: "There is no report with the specified id" });
+            throw new NotFoundError("There is no report with the specified id");
 
         if (report.status !== ReportStatus.Open) {
             return res.status(400).json({ message: `This report is already ${report.status} and can not be claimed` });
@@ -33,14 +35,13 @@ export async function createClaims(
 
         const populatedClaim = await Claim.findById(claim._id).populate({
             path: 'report',
-            options: { lean: true } // Retrieve plain JavaScript objects instead of Mongoose documents
+            options: { lean: true }
         });
 
         res.status(201).json(populatedClaim);
 
     } catch (error) {
-        console.error("error is: ", error);
-        res.status(500).json({ message: "Server Error" });
+        handleErrorResponse(error, res);
     }
 
 
