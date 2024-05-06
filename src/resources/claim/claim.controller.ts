@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { NotFoundError } from "../../core/ApiError";
-import { SuccessResponse } from "../../core/ApiResponse";
+import { SuccessMsgResponse, SuccessResponse } from "../../core/ApiResponse";
 import { handleErrorResponse } from "../../helpers/errorHandle";
 import { Report, ReportStatus } from "../report/report.model";
 import { updateReportStatus } from "../report/report.repository";
@@ -60,3 +60,26 @@ export async function getClaim(
         handleErrorResponse(error, res);
     }
 }
+
+export async function deleteClaim(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const claimer_id = res.locals.user._id;
+
+        const claim = await Claim.findByIdAndDelete(claimer_id);
+
+        if (!claim)
+            throw new NotFoundError("There is no claim made by this user");
+
+        const updatedReport = await updateReportStatus({ report_id: claim.report, status: ReportStatus.Open });
+
+        return new SuccessMsgResponse("Claim deleted successfully").send(res);
+
+    } catch (error) {
+        handleErrorResponse(error, res);
+    }
+}
+
