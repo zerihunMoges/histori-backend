@@ -1,7 +1,7 @@
 import { InternalError, NotFoundError } from "../../core/ApiError";
 import { ReportStatus } from "../report/report.model";
 import { updateReportStatus } from "../report/report.repository";
-import { Claim } from "./claim.model";
+import { Claim } from "./review.model";
 
 export async function deleteClaim({ _id }) {
     try {
