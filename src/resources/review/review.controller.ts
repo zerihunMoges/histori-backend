@@ -4,9 +4,9 @@ import { SuccessMsgResponse, SuccessResponse } from "../../core/ApiResponse";
 import { handleErrorResponse } from "../../helpers/errorHandle";
 import { Report, ReportStatus } from "../report/report.model";
 import { updateReportStatus } from "../report/report.repository";
-import { Claim, calculateDueDate } from "./claim.model";
-import { deleteClaim } from "./claim.repository";
-import { deleteClaimAndNotify } from "./claim.service";
+import { Claim, calculateDueDate } from "./review.model";
+import { deleteClaim } from "./review.repository";
+import { deleteClaimAndNotify } from "./review.service";
 
 export async function createClaims(
     req: Request,

@@ -1,5 +1,5 @@
 import { InternalError } from "../../core/ApiError";
-import { deleteClaim } from "./claim.repository";
+import { deleteClaim } from "./review.repository";
 
 export async function deleteClaimAndNotify({ _id, report_id }) {
     try {
