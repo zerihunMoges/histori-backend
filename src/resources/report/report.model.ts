@@ -7,7 +7,7 @@ export enum ReportType {
 
 export enum ReportStatus {
   Open = "open",
-  Claimed = "claimed",
+  UnderReview = "under_review",
   Closed = "closed",
 }
 
@@ -46,7 +46,7 @@ const ReportSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: [ReportStatus.Open, ReportStatus.Claimed, ReportStatus.Closed],
+    enum: [ReportStatus.Open, ReportStatus.UnderReview, ReportStatus.Closed],
     default: ReportStatus.Open,
   },
 }, { timestamps: true });

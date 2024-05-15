@@ -4,10 +4,10 @@ import express from "express";
 import { config } from "../config";
 import connectDB from "../db";
 import logger from "./core/logger";
-import claimRouter from "./resources/claim/claim.route";
 import historyRouter from "./resources/history/history.route";
 import mapRouter from "./resources/map/map.route";
 import reportRouter from "./resources/report/report.route";
+import reviewRouter from "./resources/review/review.route";
 import userRouter from "./resources/user/user.route";
 import scriptRouter from "./scripts/auto_populate";
 
@@ -22,7 +22,7 @@ app.use(`/api/v${config.apiVersion}/script`, scriptRouter);
 app.use(`/api/v${config.apiVersion}/users`, userRouter);
 app.use(`/api/v${config.apiVersion}/histories`, historyRouter);
 app.use(`/api/v${config.apiVersion}/reports`, reportRouter);
-app.use(`/api/v${config.apiVersion}/claims`, claimRouter);
+app.use(`/api/v${config.apiVersion}/reviews`, reviewRouter);
 
 export const start = async () => {
   try {
