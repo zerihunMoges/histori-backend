@@ -17,6 +17,7 @@ export interface IReview {
     reviewer: mongoose.Types.ObjectId;
     report: mongoose.Types.ObjectId;
     content_id: mongoose.Types.ObjectId;
+    temp_history_id: mongoose.Types.ObjectId;
     type: string;
     changes: string;
     status: string;
@@ -39,6 +40,10 @@ const ReviewSchema = new mongoose.Schema({
     type: {
         type: String,
         enum: [ReportType.History, ReportType.Map]
+    },
+    temp_history_id: {
+        type: mongoose.Types.ObjectId,
+        ref: "TempHistory",
     },
     changes: {
         type: String,
