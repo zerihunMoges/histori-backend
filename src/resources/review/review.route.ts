@@ -1,24 +1,24 @@
 import { Router } from "express";
 import { authenticate, permit } from "../../middlewares/authentication";
 import { Role } from "../../utils/roles";
-import { claimActions, createClaims, getClaim, removeClaim } from "./claim.controller";
+import { createReviews, getReview, removeReview, reviewActions } from "./review.controller";
 
-const claimRouter = Router();
+const reviewRouter = Router();
 
-claimRouter.use(authenticate, permit(Role.Admin, Role.Contributor));
+reviewRouter.use(authenticate, permit(Role.Admin, Role.Contributor));
 
-claimRouter
+reviewRouter
     .route("/")
-    .get(authenticate, permit(Role.Admin, Role.Contributor), getClaim)
-    .delete(authenticate, permit(Role.Admin, Role.Contributor), removeClaim);
+    .get(authenticate, permit(Role.Admin, Role.Contributor), getReview)
+    .delete(authenticate, permit(Role.Admin, Role.Contributor), removeReview);
 
-claimRouter
+reviewRouter
     .route("/reminders-and-expirations/")
-    .post(claimActions);
+    .post(reviewActions);
 
 
-claimRouter
+reviewRouter
     .route("/:report_id")
-    .post(authenticate, permit(Role.Admin, Role.Contributor), createClaims);
+    .post(authenticate, permit(Role.Admin, Role.Contributor), createReviews);
 
-export default claimRouter;
+export default reviewRouter;

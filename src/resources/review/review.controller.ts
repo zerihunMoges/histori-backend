@@ -1,44 +1,41 @@
 import { NextFunction, Request, Response } from "express";
-import { NotFoundError } from "../../core/ApiError";
+import { ForbiddenError } from "../../core/ApiError";
 import { SuccessMsgResponse, SuccessResponse } from "../../core/ApiResponse";
 import { handleErrorResponse } from "../../helpers/errorHandle";
-import { Report, ReportStatus } from "../report/report.model";
-import { updateReportStatus } from "../report/report.repository";
-import { Claim, calculateDueDate } from "./review.model";
-import { deleteClaim } from "./review.repository";
-import { deleteClaimAndNotify } from "./review.service";
+import { Review } from "./review.model";
+import { createReviewRepo, deleteReviewRepo, getReviewRepo, getReviewsByTypeRepo } from "./review.repository";
+import { deleteReviewAndNotify } from "./review.service";
 
-export async function createClaims(
+export async function createReviews(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
     try {
         const report_id = req.params.report_id;
-        const claimer_id = res.locals.user._id;
+        const reviewer_id = res.locals.user._id;
 
-        const report = await Report.findById(report_id);
-        if (!report)
-            throw new NotFoundError("There is no report with the specified id");
+        const review = await createReviewRepo({ report_id, reviewer_id });
 
-        if (report.status !== ReportStatus.Open) {
-            return res.status(400).json({ message: `This report is already ${report.status} and can not be claimed` });
-        }
+        return new SuccessResponse("Review Created Successfully", review).send(res);
 
-        const claim = new Claim({
-            _id: claimer_id,
-            claimer: claimer_id,
-            report: report_id,
-            due_date: calculateDueDate()
-        });
+    } catch (error) {
+        handleErrorResponse(error, res);
+    }
+}
 
-        await claim.save();
+export async function getReviews(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+    try {
+        const reviewer_id = res.locals.user._id;
+        const type = req.params.type;
 
-        const updatedReport = await updateReportStatus({ report_id, status: ReportStatus.Claimed });
+        const reviews = await getReviewsByTypeRepo({ reviewer_id, type });
 
-        const populatedClaim = await Claim.findById(claim._id).populate('report').lean().exec();
-
-        res.status(201).json(populatedClaim);
+        return new SuccessResponse("Reviews retrieved successfully", reviews).send(res);
 
     } catch (error) {
         handleErrorResponse(error, res);
@@ -46,34 +43,38 @@ export async function createClaims(
 }
 
 
-export async function getClaim(
+export async function getReview(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
     try {
-        const claimer_id = res.locals.user._id;
+        const reviewer_id = res.locals.user._id;
+        const _id = req.params._id;
 
-        const claim = await Claim.findById(claimer_id).populate("report").lean().exec();
+        const review = await getReviewRepo({ _id });
 
-        return new SuccessResponse("Claim retrieved successfully", claim).send(res);
+        if (review.reviewer.toString() !== reviewer_id.toString())
+            throw new ForbiddenError("You are not authorized to view this review");
+
+        return new SuccessResponse("Review retrieved successfully", review).send(res);
 
     } catch (error) {
         handleErrorResponse(error, res);
     }
 }
 
-export async function removeClaim(
+export async function removeReview(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
     try {
-        const claimer_id = res.locals.user._id;
+        const reviewer_id = res.locals.user._id;
 
-        const claim = deleteClaim({ _id: claimer_id });
+        const review = await deleteReviewRepo({ _id: reviewer_id });
 
-        return new SuccessMsgResponse("Claim deleted successfully").send(res);
+        return new SuccessMsgResponse("Review deleted successfully").send(res);
 
     } catch (error) {
         handleErrorResponse(error, res);
@@ -81,27 +82,27 @@ export async function removeClaim(
 }
 
 
-export async function claimActions(
+export async function reviewActions(
     req: Request,
     res: Response,
     next: NextFunction
 ) {
     try {
-        const claims = await Claim.find({}, { _id: 1, due_date: 1, report: 1 });
+        const reviews = await Review.find({}, { _id: 1, due_date: 1, report: 1 });
         const tasks = [];
         const currentDate = new Date();
 
-        claims.forEach(claim => {
-            if (currentDate >= claim.due_date) {
-                tasks.push(deleteClaimAndNotify({ _id: claim._id, report_id: claim.report }));
-            } else if (currentDate < claim.due_date) {
-                // tasks.push(console.log("Send reminders to claimer"));
+        reviews.forEach(review => {
+            if (currentDate >= review.due_date) {
+                tasks.push(deleteReviewAndNotify({ _id: review._id, report_id: review.report }));
+            } else if (currentDate < review.due_date) {
+                // tasks.push(console.log("Send reminders to Reviewer"));
             }
         })
 
         await Promise.all(tasks);
 
-        return new SuccessMsgResponse("Claim Actions performed successfully").send(res);
+        return new SuccessMsgResponse("Review Actions performed successfully").send(res);
 
     } catch (error) {
         handleErrorResponse(error, res);

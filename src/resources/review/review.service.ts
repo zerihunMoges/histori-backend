@@ -1,13 +1,13 @@
 import { InternalError } from "../../core/ApiError";
-import { deleteClaim } from "./review.repository";
+import { deleteReviewRepo } from "./review.repository";
 
-export async function deleteClaimAndNotify({ _id, report_id }) {
+export async function deleteReviewAndNotify({ _id, report_id }) {
     try {
-        const claim = await deleteClaim({ _id });
+        const review = await deleteReviewRepo({ _id });
 
         // Send notification to the user
 
-        return claim;
+        return review;
     } catch (error) {
         throw new InternalError(error)
     }

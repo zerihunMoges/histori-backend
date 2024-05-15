@@ -1,19 +1,30 @@
 import mongoose from "mongoose";
 import { ConflictError } from "../../core/ApiError";
+import { ReportType } from "../report/report.model";
 
-export interface IClaim {
+export enum ReviewType {
+    Map = "Map",
+    History = "TempHistory",
+}
+
+export enum ReviewStatus {
+    Pending = "Pending",
+    Approved = "Approved",
+}
+
+export interface IReview {
     _id: mongoose.Types.ObjectId;
-    claimer: mongoose.Types.ObjectId;
+    reviewer: mongoose.Types.ObjectId;
     report: mongoose.Types.ObjectId;
+    content_id: mongoose.Types.ObjectId;
+    type: string;
+    changes: string;
+    status: string;
     due_date: Date;
 }
 
-const ClaimSchema = new mongoose.Schema({
-    _id: {
-        type: mongoose.Types.ObjectId,
-        ref: "User"
-    },
-    claimer: {
+const ReviewSchema = new mongoose.Schema({
+    reviewer: {
         type: mongoose.Types.ObjectId,
         ref: "User"
     },
@@ -21,11 +32,28 @@ const ClaimSchema = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         ref: "Report",
     },
+    content_id: {
+        type: mongoose.Schema.ObjectId,
+        refPath: 'type'
+    },
+    type: {
+        type: String,
+        enum: [ReportType.History, ReportType.Map]
+    },
+    changes: {
+        type: String,
+        maxlength: [500, "Changes can not exceed 500 characters"],
+    },
     due_date: {
         type: Date,
         required: true,
     },
-}, { _id: false });
+    status: {
+        type: String,
+        enum: [ReviewStatus.Pending, ReviewStatus.Approved],
+        default: ReviewStatus.Pending,
+    },
+});
 
 
 const addedDays = (7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
@@ -38,17 +66,16 @@ export function calculateDueDate() {
     return dueDate;
 }
 
-ClaimSchema.pre("save", function (next) {
-    Claim.findById(this._id)
-        .then(existingClaim => {
-            if (existingClaim) {
-                throw new ConflictError('This user already has an active claim.');
+ReviewSchema.pre("save", function (next) {
+    Review.findOne({ reviewer: this.reviewer, status: ReviewStatus.Pending })
+        .then(existingReview => {
+            if (existingReview) {
+                throw new ConflictError('This user already has an active Review.');
             } else {
-                this.due_date = calculateDueDate();
                 next();
             }
         })
         .catch(err => next(err));
 });
 
-export const Claim = mongoose.model<IClaim>("Claim", ClaimSchema);
+export const Review = mongoose.model<IReview>("Review", ReviewSchema);
