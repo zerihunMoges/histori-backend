@@ -1,8 +1,8 @@
 import { ConflictError, ForbiddenError, NotFoundError } from "../../core/ApiError";
-import { createTempHistoryRepo, getTempHistoryRepo, updateTempHistoryRepo } from "../history/history.repository";
+import { createTempHistoryRepo, deleteTempHistoryRepo, getTempHistoryRepo, updateTempHistoryRepo } from "../history/history.repository";
 import { Report, ReportStatus, ReportType } from "../report/report.model";
 import { updateReportStatus } from "../report/report.repository";
-import { calculateDueDate, Review } from "./review.model";
+import { calculateDueDate, Review, ReviewStatus } from "./review.model";
 
 export async function populateReview({ review, type }) {
     await review.populate({
@@ -92,9 +92,13 @@ export async function deleteUserReviewRepo({ _id, reviewer_id }) {
         if (reviewer_id.toString() !== review.reviewer.toString())
             throw new ForbiddenError("You are not authorized to delete this review");
 
-        const deleted_review = await Review.findByIdAndDelete(_id);
+        // const del =  await deleteTempHistoryRepo({ _id: reviewer_id });
+        // const deleted_review = await Review.findByIdAndDelete(_id);
 
-        await updateReportStatus({ report_id: review.report, status: ReportStatus.Open });
+        // await updateReportStatus({ report_id: review.report, status: ReportStatus.Open });
+
+
+        await Promise.all([deleteTempHistoryRepo({ _id: reviewer_id }), Review.findByIdAndDelete(_id), updateReportStatus({ report_id: review.report, status: ReportStatus.Open })]);
 
         return review;
     } catch (error) {
@@ -125,6 +129,38 @@ export async function saveHistoryReviewRepo({
         }
 
         const saved_review = await Review.findByIdAndUpdate(_id, { changes, temp_history_id: temp_history._id }, { new: true });
+
+        await populateReview({ review: saved_review, type: ReportType.History });
+
+        return saved_review;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function submitHistoryReviewRepo({
+    user_id,
+    _id,
+    changes,
+    title,
+    country,
+    start_year,
+    end_year,
+    content,
+    categories,
+    sources }) {
+    try {
+        const temp_history_exists = await getTempHistoryRepo({ _id: user_id });
+
+        let temp_history;
+
+        if (!temp_history_exists) {
+            temp_history = await createTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources });
+        } else {
+            temp_history = await updateTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources });
+        }
+
+        const [saved_review, deletedHistory] = await Promise.all([Review.findByIdAndUpdate(_id, { changes, temp_history_id: temp_history._id, status: ReviewStatus.Approved }, { new: true }), deleteTempHistoryRepo({ _id: user_id })]);
 
         await populateReview({ review: saved_review, type: ReportType.History });
 

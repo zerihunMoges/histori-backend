@@ -2,9 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { ForbiddenError } from "../../core/ApiError";
 import { SuccessMsgResponse, SuccessResponse } from "../../core/ApiResponse";
 import { handleErrorResponse } from "../../helpers/errorHandle";
-import { deleteTempHistoryRepo } from "../history/history.repository";
 import { Review } from "./review.model";
-import { createReviewRepo, deleteUserReviewRepo, getReviewRepo, getReviewsByTypeRepo, saveHistoryReviewRepo } from "./review.repository";
+import { createReviewRepo, deleteUserReviewRepo, getReviewRepo, getReviewsByTypeRepo, saveHistoryReviewRepo, submitHistoryReviewRepo } from "./review.repository";
 import { deleteReviewAndNotify } from "./review.service";
 
 export async function createReviews(
@@ -74,15 +73,7 @@ export async function removeReview(
         const reviewer_id = res.locals.user._id;
         const _id = req.params._id;
 
-        const review = await getReviewRepo({ _id });
-
-        if (review.reviewer.toString() !== reviewer_id.toString())
-            throw new ForbiddenError("You are not authorized to view this review");
-
-        const response = await Promise.all([deleteUserReviewRepo({ _id, reviewer_id }), deleteTempHistoryRepo({ _id: reviewer_id })]);
-
-        // const deletedReview = await deleteUserReviewRepo({ _id, reviewer_id });
-        // const tempHistory = await deleteTempHistoryRepo({ _id });
+        const deletedReview = await deleteUserReviewRepo({ _id, reviewer_id })
 
         return new SuccessMsgResponse("Review deleted successfully").send(res);
 
@@ -99,13 +90,13 @@ export async function reviewActions(
     next: NextFunction
 ) {
     try {
-        const reviews = await Review.find({}, { _id: 1, due_date: 1, report: 1 });
+        const reviews = await Review.find({}, { _id: 1, due_date: 1, report: 1, reviewer: 1 });
         const tasks = [];
         const currentDate = new Date();
 
         reviews.forEach(review => {
             if (currentDate >= review.due_date) {
-                tasks.push(deleteReviewAndNotify({ _id: review._id, report_id: review.report }));
+                tasks.push(deleteReviewAndNotify({ _id: review._id, report_id: review.report, reviewer_id: review.reviewer }));
             } else if (currentDate < review.due_date) {
                 // tasks.push(console.log("Send reminders to Reviewer"));
             }
@@ -146,6 +137,38 @@ export async function saveHistoryReview(req: Request,
             throw new ForbiddenError("You are not authorized to view this review");
 
         const updatedReview = await saveHistoryReviewRepo({ user_id: reviewer_id, _id, changes, title, country, start_year, end_year, content, categories, sources });
+
+        return new SuccessResponse("Review Actions performed successfully", updatedReview).send(res);
+    } catch (error) {
+        handleErrorResponse(error, res);
+    }
+}
+
+export async function submitHistoryReview(req: Request,
+    res: Response,
+    next: NextFunction) {
+    try {
+        const reviewer_id = res.locals.user._id;
+        const _id = req.params._id;
+
+        let {
+            changes,
+            title,
+            country,
+            start_year,
+            end_year,
+            content,
+            categories,
+            sources
+        } = req.body;
+
+
+        const review = await getReviewRepo({ _id });
+
+        if (review.reviewer.toString() !== reviewer_id.toString())
+            throw new ForbiddenError("You are not authorized to view this review");
+
+        const updatedReview = await submitHistoryReviewRepo({ user_id: reviewer_id, _id, changes, title, country, start_year, end_year, content, categories, sources });
 
         return new SuccessResponse("Review Actions performed successfully", updatedReview).send(res);
     } catch (error) {
