@@ -1,7 +1,7 @@
-import { InternalError } from "../../core/ApiError";
 import { TempHistory } from "./history.model";
 
 export async function createTempHistoryRepo({
+    _id,
     title,
     country,
     start_year,
@@ -11,6 +11,7 @@ export async function createTempHistoryRepo({
     sources }) {
     try {
         const tempHistory = new TempHistory({
+            _id,
             title,
             country,
             start_year,
@@ -24,7 +25,7 @@ export async function createTempHistoryRepo({
 
         return tempHistory;
     } catch (error) {
-        throw new InternalError(error)
+        throw error;
     }
 }
 
@@ -50,7 +51,7 @@ export async function updateTempHistoryRepo({
 
         return tempHistory;
     } catch (error) {
-        throw new InternalError(error)
+        throw error;
     }
 }
 
@@ -60,7 +61,7 @@ export async function deleteTempHistoryRepo({ _id }) {
 
         return tempHistory;
     } catch (error) {
-        throw new InternalError(error)
+        throw error;
     }
 }
 
@@ -70,6 +71,6 @@ export async function getTempHistoryRepo({ _id }) {
 
         return tempHistory;
     } catch (error) {
-        throw new InternalError(error)
+        throw error;
     }
 }

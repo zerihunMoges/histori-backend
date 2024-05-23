@@ -1,4 +1,5 @@
-import { ConflictError, InternalError, NotFoundError } from "../../core/ApiError";
+import { ConflictError, ForbiddenError, NotFoundError } from "../../core/ApiError";
+import { createTempHistoryRepo, getTempHistoryRepo, updateTempHistoryRepo } from "../history/history.repository";
 import { Report, ReportStatus, ReportType } from "../report/report.model";
 import { updateReportStatus } from "../report/report.repository";
 import { calculateDueDate, Review } from "./review.model";
@@ -10,7 +11,7 @@ export async function populateReview({ review, type }) {
     });
 
     if (type === ReportType.History) {
-        await review.populate("content_id");
+        await review.populate("content_id temp_history_id");
     } else if (type === ReportType.Map) {
         await review.populate({
             path: "content_id",
@@ -48,7 +49,7 @@ export async function createReviewRepo({ report_id, reviewer_id }) {
 
         return review;
     } catch (error) {
-        throw new InternalError(error)
+        throw error
     }
 }
 
@@ -62,7 +63,7 @@ export async function getReviewsByTypeRepo({ reviewer_id, type }) {
 
         return reviews;
     } catch (error) {
-        throw new InternalError(error)
+        throw error;
     }
 }
 
@@ -77,32 +78,58 @@ export async function getReviewRepo({ _id }) {
 
         return review;
     } catch (error) {
-        throw new InternalError(error)
+        throw error
     }
 }
 
-export async function deleteReviewRepo({ _id }) {
+export async function deleteUserReviewRepo({ _id, reviewer_id }) {
     try {
-        const review = await Review.findByIdAndDelete(_id);
+        const review = await Review.findById(_id);
 
         if (!review)
             throw new NotFoundError("Review not found");
+
+        if (reviewer_id.toString() !== review.reviewer.toString())
+            throw new ForbiddenError("You are not authorized to delete this review");
+
+        const deleted_review = await Review.findByIdAndDelete(_id);
 
         await updateReportStatus({ report_id: review.report, status: ReportStatus.Open });
 
         return review;
     } catch (error) {
-        throw new InternalError(error)
+        throw error;
     }
 }
 
-export async function saveHistoryReviewRepo({ _id, changes, title,
+export async function saveHistoryReviewRepo({
+    user_id,
+    _id,
+    changes,
+    title,
     country,
     start_year,
     end_year,
-    summary,
     content,
     categories,
     sources }) {
+    try {
+        const temp_history_exists = await getTempHistoryRepo({ _id: user_id });
 
+        let temp_history;
+
+        if (!temp_history_exists) {
+            temp_history = await createTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources });
+        } else {
+            temp_history = await updateTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources });
+        }
+
+        const saved_review = await Review.findByIdAndUpdate(_id, { changes, temp_history_id: temp_history._id }, { new: true });
+
+        await populateReview({ review: saved_review, type: ReportType.History });
+
+        return saved_review;
+    } catch (error) {
+        throw error;
+    }
 }

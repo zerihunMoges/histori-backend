@@ -1,9 +1,9 @@
 import { InternalError } from "../../core/ApiError";
-import { deleteReviewRepo } from "./review.repository";
+import { deleteUserReviewRepo } from "./review.repository";
 
 export async function deleteReviewAndNotify({ _id, report_id }) {
     try {
-        const review = await deleteReviewRepo({ _id });
+        const review = await deleteUserReviewRepo(_id);
 
         // Send notification to the user
 
