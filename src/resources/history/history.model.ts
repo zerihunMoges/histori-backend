@@ -41,4 +41,33 @@ const HistorySchema = new mongoose.Schema({
   },
 });
 
+const TempHistorySchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Types.ObjectId,
+    ref: "User",
+  },
+  title: {
+    type: String,
+  },
+  country: {
+    type: String,
+  },
+  start_year: {
+    type: Number,
+  },
+  end_year: {
+    type: Number,
+  },
+  content: {
+    type: String,
+  },
+  categories: {
+    type: Array<String>,
+  },
+  sources: {
+    type: Array<String>,
+  },
+}, { _id: false });
+
 export const History = mongoose.model<IHistory>("History", HistorySchema);
+export const TempHistory = mongoose.model<IHistory>("TempHistory", TempHistorySchema);
