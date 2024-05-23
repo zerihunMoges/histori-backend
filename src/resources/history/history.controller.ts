@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from "express";
-import { History } from "./history.model";
+import { NextFunction, Request, Response } from "express";
 import { config } from "../../../config";
+import { History } from "./history.model";
 const OpenAI = require("openai");
 
 
@@ -30,9 +30,9 @@ export async function getHistories(
   try {
     const histories = await History.find({
       start_year: { $lte: parseInt(year) },
-      end_year: { $gte: parseInt(year)},
-      country: {$eq: country},
-      title: {$regex: query, $options: "i"},
+      end_year: { $gte: parseInt(year) },
+      country: { $eq: country },
+      title: { $regex: query, $options: "i" },
     });
 
     return res.status(200).json(histories);
@@ -66,11 +66,12 @@ export async function createHistories(
       {
         role: "system",
         content:
-          "You are a history api, you only provide json format answers only. I will provide you with a historical article and you will provide with the start_year, end_year, and categories(category is what the article is about it could be talking about a city, institution, a battle, a war) for the article. You will do this in a json format. e.g. {start_year: '2020', end_year: '2020', categories: ['battle']}. don't have newline symbols or anything. keep in mind that {\n  'start_year': 1850,\n  'end_year': 1850\n, 'categories': ['battle']\n} is not valid since it has a newline symbol which means it can not be parsed as a json.  if you can't find the start_year or end_year leave them as null, if you can't find categories leave it as an empty string. e.g. {start_year: null, end_year: null, categories: []}. Always follow the rule of providing the answer in json format without newline symbol.",
+          "You are HakimHubAI a professional medical assistant that helps to give titles to a text. You will take the text and give a one-sentence summary of the text. It needs to be very short and concise.",
       },
       {
         role: "user",
-        content: summary ? summary : content},
+        content: summary ? summary : content
+      },
     ],
     model: "gpt-3.5-turbo",
   };
@@ -80,13 +81,13 @@ export async function createHistories(
 
     const opeanai_response = JSON.parse(completion.choices[0].message.content);
 
-    if(start_year === undefined){
+    if (start_year === undefined) {
       start_year = opeanai_response.start_year;
     }
-    if(end_year === undefined){
+    if (end_year === undefined) {
       end_year = opeanai_response.end_year;
     }
-    if(categories !== undefined){
+    if (categories !== undefined) {
       categories = opeanai_response.categories;
     }
 
@@ -103,11 +104,11 @@ export async function createHistories(
     await history.save();
 
     res.status(201).json(history);
-    
+
   } catch (error) {
     console.error("error is: ", error);
     res.status(500).json({ message: "Server Error" });
   }
 
-  
+
 }
