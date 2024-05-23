@@ -1,4 +1,4 @@
-import { TempHistory } from "./history.model";
+import { History, TempHistory } from "./history.model";
 
 export async function createTempHistoryRepo({
     _id,
@@ -68,6 +68,32 @@ export async function deleteTempHistoryRepo({ _id }) {
 export async function getTempHistoryRepo({ _id }) {
     try {
         const tempHistory = await TempHistory.findById(_id);
+
+        return tempHistory;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function updateHistoryRepo({
+    _id,
+    title,
+    country,
+    start_year,
+    end_year,
+    content,
+    categories,
+    sources }) {
+    try {
+        const tempHistory = await History.findByIdAndUpdate(_id, {
+            title,
+            country,
+            start_year,
+            end_year,
+            content,
+            categories,
+            sources
+        });
 
         return tempHistory;
     } catch (error) {

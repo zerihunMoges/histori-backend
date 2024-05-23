@@ -1,5 +1,5 @@
 import { ConflictError, ForbiddenError, NotFoundError } from "../../core/ApiError";
-import { createTempHistoryRepo, deleteTempHistoryRepo, getTempHistoryRepo, updateTempHistoryRepo } from "../history/history.repository";
+import { createTempHistoryRepo, deleteTempHistoryRepo, getTempHistoryRepo, updateHistoryRepo, updateTempHistoryRepo } from "../history/history.repository";
 import { Report, ReportStatus, ReportType } from "../report/report.model";
 import { updateReportStatus } from "../report/report.repository";
 import { calculateDueDate, Review, ReviewStatus } from "./review.model";
@@ -160,7 +160,8 @@ export async function submitHistoryReviewRepo({
             temp_history = await updateTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources });
         }
 
-        const [saved_review, deletedHistory] = await Promise.all([Review.findByIdAndUpdate(_id, { changes, temp_history_id: temp_history._id, status: ReviewStatus.Approved }, { new: true }), deleteTempHistoryRepo({ _id: user_id })]);
+
+        const [saved_review, deletedHistory, _] = await Promise.all([Review.findByIdAndUpdate(_id, { changes, temp_history_id: temp_history._id, status: ReviewStatus.Approved }, { new: true }), deleteTempHistoryRepo({ _id: user_id }), updateHistoryRepo({ _id, title: temp_history.title, country: temp_history.country, start_year: temp_history.start_year, end_year: temp_history.end_year, content: temp_history.content, categories: temp_history.categories, sources: temp_history.sources })]);
 
         await populateReview({ review: saved_review, type: ReportType.History });
 
