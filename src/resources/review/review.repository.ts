@@ -160,8 +160,11 @@ export async function submitHistoryReviewRepo({
             temp_history = await updateTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources });
         }
 
-
-        const [saved_review, deletedHistory, _] = await Promise.all([Review.findByIdAndUpdate(_id, { changes, temp_history_id: temp_history._id, status: ReviewStatus.Approved }, { new: true }), deleteTempHistoryRepo({ _id: user_id }), updateHistoryRepo({ _id, title: temp_history.title, country: temp_history.country, start_year: temp_history.start_year, end_year: temp_history.end_year, content: temp_history.content, categories: temp_history.categories, sources: temp_history.sources })]);
+        const [saved_review, deletedHistory, _, __] = await Promise.all([
+            Review.findByIdAndUpdate(_id, { changes, temp_history_id: temp_history._id, status: ReviewStatus.Approved }, { new: true }),
+            deleteTempHistoryRepo({ _id: user_id }),
+            updateHistoryRepo({ _id, title: temp_history.title, country: temp_history.country, start_year: temp_history.start_year, end_year: temp_history.end_year, content: temp_history.content, categories: temp_history.categories, sources: temp_history.sources }),
+            updateReportStatus({ report_id: _id, status: ReportStatus.Closed })]);
 
         await populateReview({ review: saved_review, type: ReportType.History });
 
