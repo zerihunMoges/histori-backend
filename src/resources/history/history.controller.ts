@@ -66,7 +66,7 @@ export async function createHistories(
       {
         role: "system",
         content:
-          "You are HakimHubAI a professional medical assistant that helps to give titles to a text. You will take the text and give a one-sentence summary of the text. It needs to be very short and concise.",
+          "You are a history api, you only provide json format answers only. I will provide you with a historical article and you will provide with the start_year, end_year, and categories(category is what the article is about it could be talking about a city, institution, a battle, a war) for the article. You will do this in a json format. e.g. {start_year: '2020', end_year: '2020', categories: ['battle']}. don't have newline symbols or anything. keep in mind that {\n  'start_year': 1850,\n  'end_year': 1850\n, 'categories': ['battle']\n} is not valid since it has a newline symbol which means it can not be parsed as a json.  if you can't find the start_year or end_year leave them as null, if you can't find categories leave it as an empty string. e.g. {start_year: null, end_year: null, categories: []}. Always follow the rule of providing the answer in json format without newline symbol.",
       },
       {
         role: "user",
