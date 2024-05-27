@@ -10,18 +10,26 @@ export default class FlagController {
 
             const flag = await FlagService.createFlag(url, country, parseInt(start_year), parseInt(end_year));
 
-            return new SuccessResponse('Flag created successfully', flag).send(res);
+            const data = {
+                flag: flag
+            }
+
+            return new SuccessResponse('Flag created successfully', data).send(res);
         } catch (error) {
             handleErrorResponse(error, res);
         }
     }
     static async getFlagsByCount(req: Request, res: Response) {
         try {
-            const { count } = req.params;
+            const count = req.query.count as string;
 
-            const flags = await FlagService.getFlagsByCount(parseInt(count));
+            const flags = await FlagService.getFlagsByCount(count ? parseInt(count) : 4);
 
-            return new SuccessResponse('Flags retrieved successfully', flags).send(res);
+            const data = {
+                flags: flags
+            }
+
+            return new SuccessResponse('Flags retrieved successfully', data).send(res);
         } catch (error) {
             handleErrorResponse(error, res);
         }
