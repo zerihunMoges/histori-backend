@@ -4,8 +4,24 @@ import { config } from "../../../config";
 import { User } from "./user.model";
 
 //create token
-const createToken = (_id) => {
-  return jwt.sign({ _id }, config.jwt.secret, {
+const createToken = ({
+  _id,
+  firstName,
+  lastName,
+  email,
+  phoneNumber,
+  password,
+  role
+}) => {
+  return jwt.sign({
+    _id,
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+    password,
+    role
+  }, config.jwt.secret, {
     expiresIn: config.jwt.expiresIn,
   });
 };
@@ -16,7 +32,7 @@ export const loginUser = async (req: Request, res: Response) => {
     const user = await User.login(email, password);
 
     //create a token
-    const token = createToken(user._id);
+    const token = createToken(user);
 
     res.status(200).json({ user, token });
   } catch (err) {
@@ -29,9 +45,6 @@ export const registerUser = async (req: Request, res: Response) => {
   const { firstName, lastName, email, phoneNumber, password, role } = req.body;
 
   try {
-    if (role !== "user" && role !== "contributor") {
-      return res.status(400).json({ message: "Invalid role" });
-    }
     const user = await User.signup(
       firstName,
       lastName,
@@ -42,7 +55,7 @@ export const registerUser = async (req: Request, res: Response) => {
     );
 
     //create a token
-    const token = createToken(user._id);
+    const token = createToken(user);
     res.status(200).json({ user, token });
   } catch (err) {
     res.status(500).json({ message: err.message });
