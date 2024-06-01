@@ -1,5 +1,7 @@
 import { ConflictError, ForbiddenError, NotFoundError } from "../../core/ApiError";
+import { NotificationContentType } from "../../types/notification";
 import { createTempHistoryRepo, deleteTempHistoryRepo, getTempHistoryRepo, updateHistoryRepo, updateTempHistoryRepo } from "../history/history.repository";
+import { NotificationService } from "../notification/notification.service";
 import { Report, ReportStatus, ReportType } from "../report/report.model";
 import { updateReportStatus } from "../report/report.repository";
 import { calculateDueDate, Review, ReviewStatus } from "./review.model";
@@ -43,8 +45,11 @@ export async function createReviewRepo({ report_id, reviewer_id }) {
 
         await review.save();
 
-        const updatedReport = await updateReportStatus({ report_id, status: ReportStatus.UnderReview });
+        const sendNotification = NotificationService.createNotification(report.reporter_id.toString(), `A report you made is under review`, NotificationContentType.report, report_id);
 
+        const updatedReport = updateReportStatus({ report_id, status: ReportStatus.UnderReview });
+
+        const [_, __] = await Promise.all([sendNotification, updatedReport]);
         await populateReview({ review, type: report.type });
 
         return review;
@@ -92,13 +97,13 @@ export async function deleteUserReviewRepo({ _id, reviewer_id }) {
         if (reviewer_id.toString() !== review.reviewer.toString())
             throw new ForbiddenError("You are not authorized to delete this review");
 
-        // const del =  await deleteTempHistoryRepo({ _id: reviewer_id });
-        // const deleted_review = await Review.findByIdAndDelete(_id);
+        const delete_temp_history = deleteTempHistoryRepo({ _id: reviewer_id })
+        const delete_review = Review.findByIdAndDelete(_id)
+        const update_report_status = updateReportStatus({ report_id: review.report, status: ReportStatus.Open })
 
-        // await updateReportStatus({ report_id: review.report, status: ReportStatus.Open });
+        const [_, __, updated_report] = await Promise.all([delete_temp_history, delete_review, update_report_status]);
 
-
-        await Promise.all([deleteTempHistoryRepo({ _id: reviewer_id }), Review.findByIdAndDelete(_id), updateReportStatus({ report_id: review.report, status: ReportStatus.Open })]);
+        const sendNotification = await NotificationService.createNotification(updated_report.reporter_id.toString(), `A report you made has been reopened`, NotificationContentType.report, updated_report._id.toString());
 
         return review;
     } catch (error) {
@@ -160,15 +165,19 @@ export async function submitHistoryReviewRepo({
             temp_history = await updateTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources });
         }
 
-        const [saved_review, deletedHistory, _, __] = await Promise.all([
-            Review.findByIdAndUpdate(_id, { changes, temp_history_id: temp_history._id, status: ReviewStatus.Approved }, { new: true }),
-            deleteTempHistoryRepo({ _id: user_id }),
-            updateHistoryRepo({ _id, title: temp_history.title, country: temp_history.country, start_year: temp_history.start_year, end_year: temp_history.end_year, content: temp_history.content, categories: temp_history.categories, sources: temp_history.sources }),
-            updateReportStatus({ report_id: _id, status: ReportStatus.Closed })]);
+        const review = await Review.findByIdAndUpdate(_id, { changes, temp_history_id: temp_history._id, status: ReviewStatus.Approved }, { new: true })
+        const deletedHistoryTask = deleteTempHistoryRepo({ _id: user_id });
+        const updatedReportTask = updateReportStatus({ report_id: review.report, status: ReportStatus.Closed });
+        const updatedHistoryTask = updateHistoryRepo({ _id, title: temp_history.title, country: temp_history.country, start_year: temp_history.start_year, end_year: temp_history.end_year, content: temp_history.content, categories: temp_history.categories, sources: temp_history.sources });
 
-        await populateReview({ review: saved_review, type: ReportType.History });
 
-        return saved_review;
+        const [_, updatedReport, __] = await Promise.all([deletedHistoryTask, updatedReportTask, updatedHistoryTask]);
+
+        const sendNotification = await NotificationService.createNotification(updatedReport.reporter_id.toString(), `A report you made has been reviewed`, NotificationContentType.report, updatedReport._id.toString());
+
+        await populateReview({ review: review, type: ReportType.History });
+
+        return review;
     } catch (error) {
         throw error;
     }

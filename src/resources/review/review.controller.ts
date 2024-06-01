@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { ForbiddenError } from "../../core/ApiError";
 import { SuccessMsgResponse, SuccessResponse } from "../../core/ApiResponse";
 import { handleErrorResponse } from "../../helpers/errorHandle";
+import { NotificationContentType } from "../../types/notification";
+import { NotificationService } from "../notification/notification.service";
 import { Review } from "./review.model";
 import { createReviewRepo, deleteUserReviewRepo, getReviewRepo, getReviewsByTypeRepo, saveHistoryReviewRepo, submitHistoryReviewRepo } from "./review.repository";
 import { deleteReviewAndNotify } from "./review.service";
@@ -94,11 +96,21 @@ export async function reviewActions(
         const tasks = [];
         const currentDate = new Date();
 
+
+        const oneDayInMs = 24 * 60 * 60 * 1000;
+
+
         reviews.forEach(review => {
-            if (currentDate >= review.due_date) {
+            const timeDiff = review.due_date.getTime() - currentDate.getTime();
+
+            if (timeDiff <= 0) {
                 tasks.push(deleteReviewAndNotify({ _id: review._id, report_id: review.report, reviewer_id: review.reviewer }));
-            } else if (currentDate < review.due_date) {
+                const delete_review_message = `Sorry, you have missed the deadline for review. The review has been deleted. Points will be deducted from your account.`;
+                tasks.push(NotificationService.createNotification(review.reviewer.toString(), delete_review_message, NotificationContentType.review, review._id.toString()))
+            } else if (timeDiff <= oneDayInMs) {
                 // tasks.push(console.log("Send reminders to Reviewer"));
+                const reminder_message = `You have a review due soon. Please complete it before the deadline.`;
+                tasks.push(NotificationService.createNotification(review.reviewer.toString(), reminder_message, NotificationContentType.review, review._id.toString()))
             }
         })
 

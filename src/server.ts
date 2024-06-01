@@ -7,10 +7,12 @@ import logger from "./core/logger";
 import flagRouter from "./resources/flag/flag.route";
 import historyRouter from "./resources/history/history.route";
 import mapRouter from "./resources/map/map.route";
+import notificationRouter from "./resources/notification/notification.route";
 import reportRouter from "./resources/report/report.route";
 import reviewRouter from "./resources/review/review.route";
 import userRouter from "./resources/user/user.route";
 import scriptRouter from "./scripts/auto_populate";
+
 
 
 const app = express();
@@ -25,6 +27,7 @@ app.use(`/api/v${config.apiVersion}/histories`, historyRouter);
 app.use(`/api/v${config.apiVersion}/reports`, reportRouter);
 app.use(`/api/v${config.apiVersion}/reviews`, reviewRouter);
 app.use(`/api/v${config.apiVersion}/flags`, flagRouter);
+app.use(`/api/v${config.apiVersion}/notifications`, notificationRouter);
 
 export const start = async () => {
   try {
