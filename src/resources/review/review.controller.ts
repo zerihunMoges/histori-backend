@@ -184,7 +184,11 @@ export async function submitHistoryReview(req: Request,
         if (review.reviewer.toString() !== reviewer_id.toString())
             throw new ForbiddenError("You are not authorized to view this review");
 
-        const updatedReview = await submitHistoryReviewRepo({ user_id: reviewer_id, _id, changes, title, country, start_year, end_year, content, categories, sources });
+        const points = UserService.addPoints(reviewer_id, PointType.review);
+        const reviewUpdate = submitHistoryReviewRepo({ user_id: reviewer_id, _id, changes, title, country, start_year, end_year, content, categories, sources });
+        const reviewer_notification = NotificationService.createNotification(reviewer_id, `${PointType.review} points have been added to your account for successfully completing a review`, NotificationContentType.review, _id);
+
+        const [updatedReview, _] = await Promise.all([reviewUpdate, points, reviewer_notification])
 
         return new SuccessResponse("Review Actions performed successfully", updatedReview).send(res);
     } catch (error) {
