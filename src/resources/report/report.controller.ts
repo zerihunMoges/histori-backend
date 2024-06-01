@@ -1,10 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { Document, Types } from "mongoose";
+import { NotFoundError } from "../../core/ApiError";
 import { SuccessResponse } from "../../core/ApiResponse";
 import { handleErrorResponse } from "../../helpers/errorHandle";
 import { NotificationContentType } from "../../types/notification";
+import { PointType } from "../../types/points";
 import { History } from "../history/history.model";
 import { NotificationService } from "../notification/notification.service";
+import { UserService } from "../user/user.service";
 import { IReport, Report, ReportStatus, ReportType } from "./report.model";
 import { getHistoryReports } from "./report.repository";
 
@@ -67,7 +70,7 @@ export async function createReports(
             case ReportType.History:
                 const history = await History.find({ _id: content_id });
                 if (!history)
-                    return res.status(400).json({ message: "There is no history with the specified id" });
+                    throw new NotFoundError("There is no history with the specified id");
 
         }
 
@@ -78,11 +81,13 @@ export async function createReports(
 
         const populateTask = report.populate("content_id");
 
-        const message = `3 points have been added to your account for reporting a ${type} report`;
+
+        const message = `${PointType.report} points have been added to your account for reporting a ${type} report`;
         const notification = NotificationService.createNotification(reporter_id, message, NotificationContentType.report, report._id.toString());
+        const points = UserService.addPoints(reporter_id, PointType.report);
 
 
-        const [populatedReport, _] = await Promise.all([populateTask, notification]);
+        const [populatedReport, _, __] = await Promise.all([populateTask, notification, points]);
 
 
         const data = {

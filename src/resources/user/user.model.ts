@@ -1,5 +1,6 @@
-import mongoose, { Model } from "mongoose";
 import bcrypt from "bcrypt";
+import mongoose, { Model } from "mongoose";
+import { UserRole } from "../../types/user";
 
 export interface IUserInterface {
   firstName: String;
@@ -37,8 +38,8 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
-    enum: ["user", "admin", "contributor"],
-    default: "user",
+    enum: [UserRole.user, UserRole.admin, UserRole.contributor],
+    default: UserRole.user,
   },
   points: {
     type: Number,
