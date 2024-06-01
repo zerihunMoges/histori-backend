@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { ContentType } from "../../types/notification";
+import { NotificationContentType } from "../../types/notification";
 export interface INotification {
     user_id: mongoose.Types.ObjectId;
     message: string;
@@ -24,7 +24,7 @@ const NotificationSchema = new mongoose.Schema({
     },
     content_type: {
         type: String,
-        enum: [ContentType.history, ContentType.map]
+        enum: [NotificationContentType.report, NotificationContentType.review]
     },
     isRead: {
         type: Boolean,

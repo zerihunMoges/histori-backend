@@ -6,7 +6,7 @@ export class NotificationService {
     }
 
     static async createNotification(user_id: string, message: string, content_type: string, content: string) {
-        return await NotificationRepository.createNotification(user_id, message, content, content_type);
+        return await NotificationRepository.createNotification(user_id, message, content_type, content);
     }
 
     static async getNotifications(user_id: string, pageNumber: number, pageSize: number) {

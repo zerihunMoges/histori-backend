@@ -1,6 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import { Document, Types } from "mongoose";
+import { SuccessResponse } from "../../core/ApiResponse";
+import { handleErrorResponse } from "../../helpers/errorHandle";
+import { NotificationContentType } from "../../types/notification";
 import { History } from "../history/history.model";
+import { NotificationService } from "../notification/notification.service";
 import { IReport, Report, ReportStatus, ReportType } from "./report.model";
 import { getHistoryReports } from "./report.repository";
 
@@ -72,13 +76,24 @@ export async function createReports(
 
         await report.save();
 
-        const populatedReport = await Report.findById(report._id).populate("content_id");
+        const populateTask = report.populate("content_id");
 
-        res.status(201).json(populatedReport);
+        const message = `3 points have been added to your account for reporting a ${type} report`;
+        const notification = NotificationService.createNotification(reporter_id, message, NotificationContentType.report, report._id.toString());
 
+
+        const [populatedReport, _] = await Promise.all([populateTask, notification]);
+
+
+        const data = {
+            report: populatedReport
+        }
+
+
+        return new SuccessResponse("Report created successfully", data).send(res);
     } catch (error) {
         console.error("error is: ", error);
-        res.status(500).json({ message: "Server Error" });
+        handleErrorResponse(error, res);
     }
 
 

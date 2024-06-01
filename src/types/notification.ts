@@ -1,4 +1,4 @@
-export enum ContentType {
-    map = "map",
-    history = "history",
+export enum NotificationContentType {
+    report = "report",
+    review = "review",
 }
