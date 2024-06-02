@@ -133,13 +133,13 @@ export const becomeContributor = async (
   try {
     const user_id = res.locals.user._id;
 
-    const user = UserService.becomeContributor(user_id);
+    const user = await UserService.becomeContributor(user_id);
 
     const data = {
       user: user
     }
 
-    return new SuccessResponse('User has become a contributor', data).send(res);
+    return new SuccessResponse('Congratulations, you are now a contributor', data).send(res);
   } catch (error) {
     handleErrorResponse(error, res);
   }
