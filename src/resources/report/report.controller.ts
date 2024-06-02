@@ -1,190 +1,158 @@
-import { NextFunction, Request, Response } from "express";
-import { Document, Types } from "mongoose";
-import { SuccessResponse } from "../../core/ApiResponse";
-import { handleErrorResponse } from "../../helpers/errorHandle";
-import { NotificationContentType } from "../../types/notification";
-import { History } from "../history/history.model";
-import { NotificationService } from "../notification/notification.service";
-import { IReport, Report, ReportStatus, ReportType } from "./report.model";
-import { getHistoryReports } from "./report.repository";
+import { Request, Response } from 'express';
+import { ForbiddenError, NotFoundError } from '../../core/ApiError';
+import { SuccessResponse } from '../../core/ApiResponse';
+import { handleErrorResponse } from '../../helpers/errorHandle';
+import { ReportStatus, ReportType } from '../../types/report';
+import { History } from '../history/history.model';
+import { ReportService } from './report.service';
 
+export default class ReportController {
+    static async createReport(req: Request, res: Response) {
+        try {
+            const reporter_id = res.locals.user._id;
+            const isPopulated = true;
 
-export async function getReports(
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
-    let { type, country, categories } = req.query;
-    const start_year = req.query.start_year as string;
-    const end_year = req.query.end_year as string;
+            let {
+                content_id,
+                title,
+                type,
+                reason
+            } = req.body
 
-    if (type === undefined || typeof type !== "string" || !(type in ReportType)) {
-        return res.status(400).json({ message: "You need to specify a valid type" });
-    }
-
-    if (Number.isNaN(parseInt(start_year))) {
-        return res.status(400).json({ message: "You need to specify a valid start_year" });
-    }
-
-    if (Number.isNaN(parseInt(end_year))) {
-        return res.status(400).json({ message: "You need to specify a valid end_year" });
-    }
-
-    try {
-        let reports: Omit<Document<unknown, {}, IReport> & IReport & { _id: Types.ObjectId; }, never>[];
-        switch (type) {
-            case ReportType.History:
-                reports = await getHistoryReports({ start_year: parseInt(start_year), end_year: parseInt(end_year), country, categories });
-                return res.status(200).json(reports);
-            default:
-                res.status(400).json({ message: "Invalid Type specified" })
-        }
-
-        return res.status(500).json({ message: "Server Error" });
-    } catch (error) {
-        console.error("error is: ", error);
-        return res.status(500).json({ message: "Server Error" });
-    }
-}
-
-
-
-export async function createReports(
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
-    try {
-        const reporter_id = res.locals.user._id;
-
-        let {
-            content_id,
-            type,
-            reason
-        } = req.body
-
-        switch (type) {
-            case ReportType.History:
+            if (type == ReportType.history) {
                 const history = await History.find({ _id: content_id });
                 if (!history)
-                    return res.status(400).json({ message: "There is no history with the specified id" });
+                    throw new NotFoundError("There is no history with the specified id");
+            } else if (type == ReportType.map) {
+                console.log("Report for map invoked for type ", type)
+                throw new NotFoundError(`Report for type: ${ReportType.map} is not currently supported`)
+            } else {
+                console.log("Report for map invoked for type ", type)
+                throw new NotFoundError(`Report for type: ${type} is not currently supported`)
+            }
 
+            const report = await ReportService.createReport(reporter_id, title, content_id, type, reason, isPopulated);
+
+            const data = {
+                report: report
+            }
+
+            return new SuccessResponse('Report created successfully', data).send(res);
+        } catch (error) {
+            handleErrorResponse(error, res);
         }
-
-
-        const report = new Report({ reporter_id, content_id, type, reason });
-
-        await report.save();
-
-        const populateTask = report.populate("content_id");
-
-        const message = `3 points have been added to your account for reporting a ${type} report`;
-        const notification = NotificationService.createNotification(reporter_id, message, NotificationContentType.report, report._id.toString());
-
-
-        const [populatedReport, _] = await Promise.all([populateTask, notification]);
-
-
-        const data = {
-            report: populatedReport
-        }
-
-
-        return new SuccessResponse("Report created successfully", data).send(res);
-    } catch (error) {
-        console.error("error is: ", error);
-        handleErrorResponse(error, res);
     }
 
+    static async getReports(req: Request, res: Response) {
+        try {
+            const reporter_id = res.locals.user._id;
 
-}
+            const { type } = req.query;
+            const country = req.query.country as string;
+            const category = req.query.category as string;
+            const start_year = req.query.start_year as string;
+            const end_year = req.query.end_year as string;
 
+            let reports
 
+            if (type == ReportType.history) {
+                reports = await ReportService.getHistoryReports(reporter_id, country as string, category as string, start_year, end_year);
+            } else if (type == ReportType.map) {
+                console.log("Report for map invoked for type ", type)
+                throw new NotFoundError(`Report for type: ${ReportType.map} is not currently supported`)
+            } else {
+                console.log("Report for map invoked for type ", type)
+                throw new NotFoundError(`Report for type: ${type} is not currently supported`)
+            }
 
-export async function getReport(
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
-    try {
-        const report = await Report.findById(req.params.id).populate("content_id");
+            const data = {
+                reports: reports
+            }
 
-        if (!report)
-            return res.status(400).json({ message: "There is no report with the specified id" });
-
-        // Respond
-        res.status(200).json(report);
-    } catch (error) {
-        console.error("error is: ", error);
-        res.status(500).json({ message: "Server Error" });
+            return new SuccessResponse('Reports retrieved successfully', data).send(res);
+        } catch (error) {
+            handleErrorResponse(error, res);
+        }
     }
-}
 
-export async function updateReport(
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
-    let {
-        reason
-    } = req.body
+    static async getReport(req: Request, res: Response) {
+        try {
+            const id = req.params.id;
+            const isPopulated = true;
 
-    try {
-        const reporter_id = res.locals.user._id;
-        const report = await Report.findById(req.params.id);
+            const report = await ReportService.getReport(id, isPopulated);
 
-        if (!report)
-            return res.status(400).json({ message: "There is no report with the specified id" });
+            const data = {
+                report: report
+            }
 
-        if (report.reporter_id === undefined || report.reporter_id.toString() !== reporter_id.toString()) {
-            return res.status(400).json({ message: "You are not authorized to update this report" });
+            return new SuccessResponse('Report retrieved successfully', data).send(res);
+        } catch (error) {
+            handleErrorResponse(error, res);
         }
-
-        if (report.status !== ReportStatus.Open) {
-            return res.status(400).json({ message: `This report is already  ${report.status} and can not be updated` });
-        }
-
-        const updatedReport = await Report.findByIdAndUpdate(req.params.id, { reason }, { new: true }).populate("content_id");
-
-        // Respond
-        res.status(200).json(updatedReport);
-    } catch (error) {
-        console.error("error is: ", error);
-        res.status(500).json({ message: "Server Error" });
     }
-}
 
+    static async updateReport(req: Request, res: Response) {
+        try {
+            let {
+                title,
+                reason
+            } = req.body
+            const reporter_id = res.locals.user._id;
+            const id = req.params.id;
+            const report = await ReportService.getReport(id);
+            const isPopulated = true;
 
-export async function deleteReport(
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
-    let {
-        reason
-    } = req.body
+            if (!report)
+                throw new NotFoundError("There is no report with the specified id")
 
-    try {
-        const reporter_id = res.locals.user._id;
-        const report = await Report.findById(req.params.id);
+            if (report.reporter_id === undefined || report.reporter_id.toString() !== reporter_id.toString()) {
+                throw new ForbiddenError("You are not authorized to update this report")
+            }
 
-        if (!report)
-            return res.status(400).json({ message: "There is no report with the specified id" });
+            if (report.status !== ReportStatus.open) {
+                throw new ForbiddenError(`This report is already  ${report.status} and can not be updated`)
+            }
 
-        if (report.reporter_id === undefined || report.reporter_id.toString() !== reporter_id.toString()) {
-            return res.status(400).json({ message: "You are not authorized to delete this report" });
+            const updated_report = await ReportService.updateReport(id, title, reason, isPopulated)
+
+            const data = {
+                report: updated_report
+            }
+
+            return new SuccessResponse('Report updated successfully', data).send(res);
+        } catch (error) {
+            handleErrorResponse(error, res);
         }
+    }
 
-        if (report.status !== ReportStatus.Open) {
-            return res.status(400).json({ message: `This report is already  ${report.status} and can not be deleted` });
+    static async deleteReport(req: Request, res: Response) {
+        try {
+            const reporter_id = res.locals.user._id;
+            const id = req.params.id;
+            const report = await ReportService.getReport(id);
+            const isPopulated = true
+
+            if (!report)
+                throw new NotFoundError("There is no report with the specified id")
+
+            if (report.reporter_id === undefined || report.reporter_id.toString() !== reporter_id.toString()) {
+                throw new ForbiddenError("You are not authorized to update this report")
+            }
+
+            if (report.status !== ReportStatus.open) {
+                throw new ForbiddenError(`This report is already  ${report.status} and can not be updated`)
+            }
+
+            const updated_report = await ReportService.deleteReport(id, isPopulated)
+
+            const data = {
+                report: updated_report
+            }
+
+            return new SuccessResponse('Report deleted successfully', data).send(res);
+        } catch (error) {
+            handleErrorResponse(error, res);
         }
-
-        const deletedReport = await Report.findByIdAndDelete(req.params.id);
-
-        // Respond
-        res.status(200).json({ message: "Report deleted successfully" });
-    } catch (error) {
-        console.error("error is: ", error);
-        res.status(500).json({ message: "Server Error" });
     }
 }

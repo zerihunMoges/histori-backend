@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { config } from "../../../config";
+import { BadRequestError } from "../../core/ApiError";
 import { History } from "./history.model";
 const OpenAI = require("openai");
 
@@ -56,7 +57,7 @@ export async function createHistories(
     end_year,
     summary,
     content,
-    categories,
+    categories = [],
     sources
   } = req.body
 
@@ -66,7 +67,7 @@ export async function createHistories(
       {
         role: "system",
         content:
-          "You are HakimHubAI a professional medical assistant that helps to give titles to a text. You will take the text and give a one-sentence summary of the text. It needs to be very short and concise.",
+          "You are a history api, you only provide json format answers only. I will provide you with a historical article and you will provide with the start_year, end_year, and categories(category is what the article is about it could be talking about a city, institution, a battle, a war) for the article. You will do this in a json format. e.g. {start_year: '2020', end_year: '2020', categories: ['battle']}. don't have newline symbols or anything. keep in mind that {\n 'start_year': 1850,\n 'end_year': 1850\n, 'categories': ['battle']\n} is not valid since it has a newline symbol which means it can not be parsed as a json. if you can't find the start_year or end_year leave them as null, if you can't find categories leave it as an empty string. e.g. {start_year: null, end_year: null, categories: []}. Always follow the rule of providing the answer in json format without newline symbol.",
       },
       {
         role: "user",
@@ -79,16 +80,27 @@ export async function createHistories(
   try {
     const completion = await openai.chat.completions.create(apiRequestJson);
 
+
     const opeanai_response = JSON.parse(completion.choices[0].message.content);
 
-    if (start_year === undefined) {
-      start_year = opeanai_response.start_year;
+    if (start_year === undefined || isNaN(parseInt(start_year))) {
+      if (opeanai_response.start_year === undefined || opeanai_response.start_year === null) {
+        console.log("couldn't parse start_year for ", title)
+        throw new BadRequestError("couldn't parse start_year")
+      }
+      start_year = opeanai_response.start_year
+    } else {
+      start_year = Math.min(parseInt(start_year), opeanai_response.start_year)
     }
-    if (end_year === undefined) {
-      end_year = opeanai_response.end_year;
-    }
-    if (categories !== undefined) {
-      categories = opeanai_response.categories;
+
+    if (end_year === undefined || isNaN(parseInt(end_year))) {
+      if (opeanai_response.end_year === undefined || opeanai_response.end_year === null) {
+        console.log("couldn't parse end_year for ", title)
+        throw new BadRequestError("couldn't parse end_year")
+      }
+      end_year = opeanai_response.end_year
+    } else {
+      end_year = Math.max(parseInt(end_year), opeanai_response.end_year)
     }
 
     const history = new History({
@@ -97,7 +109,7 @@ export async function createHistories(
       start_year,
       end_year,
       content,
-      categories,
+      categories: [...categories, ...opeanai_response.categories],
       sources,
     });
 

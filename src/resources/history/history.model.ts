@@ -26,7 +26,6 @@ const HistorySchema = new mongoose.Schema({
   },
   end_year: {
     type: Number,
-    required: true,
   },
   content: {
     type: String,

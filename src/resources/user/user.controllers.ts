@@ -1,7 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { config } from "../../../config";
+import { SuccessResponse } from "../../core/ApiResponse";
+import { handleErrorResponse } from "../../helpers/errorHandle";
 import { User } from "./user.model";
+import { UserService } from "./user.service";
 
 //create token
 const createToken = ({
@@ -121,3 +124,23 @@ export const updateUser = async (
   res: Response,
   next: NextFunction
 ) => { };
+
+export const becomeContributor = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user_id = res.locals.user._id;
+
+    const user = await UserService.becomeContributor(user_id);
+
+    const data = {
+      user: user
+    }
+
+    return new SuccessResponse('Congratulations, you are now a contributor', data).send(res);
+  } catch (error) {
+    handleErrorResponse(error, res);
+  }
+};

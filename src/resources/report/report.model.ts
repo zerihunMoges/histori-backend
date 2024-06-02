@@ -1,22 +1,12 @@
 import mongoose from "mongoose";
-
-export enum ReportType {
-  Map = "Map",
-  History = "History",
-}
-
-export enum ReportStatus {
-  Open = "open",
-  UnderReview = "under_review",
-  Closed = "closed",
-}
+import { ReportStatus, ReportType } from "../../types/report";
 
 export interface IReport {
   id: mongoose.Types.ObjectId;
+  title: string;
   reporter_id: mongoose.Types.ObjectId;
   content_id: mongoose.Types.ObjectId;
   type: string;
-  review_id: mongoose.Types.ObjectId;
   reason: string;
   status: string;
 }
@@ -26,17 +16,19 @@ const ReportSchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     ref: "User",
   },
+  title: {
+    type: String,
+    required: true,
+    maxlength: [200, "Title can not exceed 200 characters"],
+    minlength: [1, "Title can not be less than one character"],
+  },
   content_id: {
     type: mongoose.Schema.ObjectId,
     refPath: 'type'
   },
   type: {
     type: String,
-    enum: [ReportType.History, ReportType.Map]
-  },
-  review: {
-    type: mongoose.Schema.ObjectId,
-    ref: "Review",
+    enum: [ReportType.history, ReportType.map]
   },
   reason: {
     type: String,
@@ -46,9 +38,11 @@ const ReportSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: [ReportStatus.Open, ReportStatus.UnderReview, ReportStatus.Closed],
-    default: ReportStatus.Open,
+    enum: [ReportStatus.open, ReportStatus.underReview, ReportStatus.closed],
+    default: ReportStatus.open,
   },
 }, { timestamps: true });
 
 export const Report = mongoose.model<IReport>("Report", ReportSchema);
+export { ReportType };
+

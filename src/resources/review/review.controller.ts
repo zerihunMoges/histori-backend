@@ -3,7 +3,9 @@ import { ForbiddenError } from "../../core/ApiError";
 import { SuccessMsgResponse, SuccessResponse } from "../../core/ApiResponse";
 import { handleErrorResponse } from "../../helpers/errorHandle";
 import { NotificationContentType } from "../../types/notification";
+import { PointType } from "../../types/points";
 import { NotificationService } from "../notification/notification.service";
+import { UserService } from "../user/user.service";
 import { Review } from "./review.model";
 import { createReviewRepo, deleteUserReviewRepo, getReviewRepo, getReviewsByTypeRepo, saveHistoryReviewRepo, submitHistoryReviewRepo } from "./review.repository";
 import { deleteReviewAndNotify } from "./review.service";
@@ -105,8 +107,10 @@ export async function reviewActions(
 
             if (timeDiff <= 0) {
                 tasks.push(deleteReviewAndNotify({ _id: review._id, report_id: review.report, reviewer_id: review.reviewer }));
-                const delete_review_message = `Sorry, you have missed the deadline for review. The review has been deleted. Points will be deducted from your account.`;
+
+                const delete_review_message = `Sorry, you have missed the deadline for review. The review has been deleted. ${PointType.expiration} points will be deducted from your account.`;
                 tasks.push(NotificationService.createNotification(review.reviewer.toString(), delete_review_message, NotificationContentType.review, review._id.toString()))
+                tasks.push(UserService.addPoints(review.reviewer.toString(), PointType.expiration));
             } else if (timeDiff <= oneDayInMs) {
                 // tasks.push(console.log("Send reminders to Reviewer"));
                 const reminder_message = `You have a review due soon. Please complete it before the deadline.`;
@@ -180,7 +184,11 @@ export async function submitHistoryReview(req: Request,
         if (review.reviewer.toString() !== reviewer_id.toString())
             throw new ForbiddenError("You are not authorized to view this review");
 
-        const updatedReview = await submitHistoryReviewRepo({ user_id: reviewer_id, _id, changes, title, country, start_year, end_year, content, categories, sources });
+        const points = UserService.addPoints(reviewer_id, PointType.review);
+        const reviewUpdate = submitHistoryReviewRepo({ user_id: reviewer_id, _id, changes, title, country, start_year, end_year, content, categories, sources });
+        const reviewer_notification = NotificationService.createNotification(reviewer_id, `${PointType.review} points have been added to your account for successfully completing a review`, NotificationContentType.review, _id);
+
+        const [updatedReview, _] = await Promise.all([reviewUpdate, points, reviewer_notification])
 
         return new SuccessResponse("Review Actions performed successfully", updatedReview).send(res);
     } catch (error) {

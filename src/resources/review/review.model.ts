@@ -1,16 +1,7 @@
 import mongoose from "mongoose";
 import { ConflictError } from "../../core/ApiError";
-import { ReportType } from "../report/report.model";
-
-export enum ReviewType {
-    Map = "Map",
-    History = "TempHistory",
-}
-
-export enum ReviewStatus {
-    Pending = "Pending",
-    Approved = "Approved",
-}
+import { ReportType } from "../../types/report";
+import { ReviewStatus } from "../../types/review";
 
 export interface IReview {
     _id: mongoose.Types.ObjectId;
@@ -39,7 +30,7 @@ const ReviewSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: [ReportType.History, ReportType.Map]
+        enum: [ReportType.history, ReportType.map]
     },
     temp_history_id: {
         type: mongoose.Types.ObjectId,
@@ -55,8 +46,8 @@ const ReviewSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: [ReviewStatus.Pending, ReviewStatus.Approved],
-        default: ReviewStatus.Pending,
+        enum: [ReviewStatus.pending, ReviewStatus.approved],
+        default: ReviewStatus.pending,
     },
 });
 
@@ -72,7 +63,7 @@ export function calculateDueDate() {
 }
 
 ReviewSchema.pre("save", function (next) {
-    Review.findOne({ reviewer: this.reviewer, status: ReviewStatus.Pending })
+    Review.findOne({ reviewer: this.reviewer, status: ReviewStatus.pending })
         .then(existingReview => {
             if (existingReview) {
                 throw new ConflictError('This user already has an active Review.');
