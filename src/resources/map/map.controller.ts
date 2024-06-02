@@ -1,7 +1,6 @@
-import { Request, Response, NextFunction } from "express";
-import { Map, TempMap } from "./map.model";
+import { NextFunction, Request, Response } from "express";
 import NodeCache from "node-cache";
-import { Redis } from "ioredis";
+import { Map, TempMap } from "./map.model";
 const cache = new NodeCache({
   deleteOnExpire: true,
   maxKeys: 100,
@@ -48,8 +47,6 @@ export async function getMap(req, res, next) {
       return res.status(400).json({ message: "Invalid period parameter" });
     }
 
-    console.log("Request for year:", year);
-
     // Fetch map data from cache or database
     const mapData = await fetchMapData(year);
 
@@ -70,7 +67,6 @@ export async function getTempMap(
   let { period } = req.query;
 
   try {
-    console.log("request for ", period);
     if (typeof period !== "string") {
       return res.status(400).json({ message: "invalid period parameter" });
     }

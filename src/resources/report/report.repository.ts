@@ -1,32 +1,75 @@
-import { InternalError, NotFoundError } from "../../core/ApiError";
 import { Report } from "./report.model";
 
-export async function getHistoryReports({ start_year, end_year, country, categories }) {
-    try {
+export class ReportRepository {
+    static async createReport(reporter_id: string, title: string, content_id: string, type: string, reason: string, isPopulated: boolean) {
+        const report = await Report.create({ reporter_id, title, content_id, type, reason })
+
+        if (isPopulated) {
+            await report.populate("content_id")
+        }
+
+        return report
+    }
+
+    static async getReport(id: string, isPopulated: boolean) {
+        const report = await Report.findById(id)
+
+        if (isPopulated) {
+            await report.populate("content_id")
+        }
+
+        return report
+    }
+
+    static async updateReport(id: string, title: string, reason: string, isPopulated: boolean) {
+        const report = await Report.findByIdAndUpdate(id, { title, reason }, { new: true })
+
+        if (isPopulated) {
+            await report.populate("content_id")
+        }
+
+        return report
+    }
+
+    static async updateReportStatus(id: string, status: string, isPopulated: boolean) {
+        const report = await Report.findByIdAndUpdate(id, { status }, { new: true })
+
+        if (isPopulated) {
+            await report.populate("content_id")
+        }
+
+        return report
+    }
+
+    static async getHistoryReports(reporter_id: string, country: string, category: string, start_year: string, end_year: string) {
+
         const pipeline: any[] = [
             {
                 $lookup: {
                     from: "histories",
                     localField: "content_id",
                     foreignField: "_id",
-                    as: "content"
+                    as: "content_id"
                 }
             },
         ];
 
         const matchStage = {};
 
+        matchStage["reporter_id"] = reporter_id;
+
         if (country) {
             matchStage["content.country"] = country;
         }
 
-        if (start_year && end_year) {
-            matchStage["content.start_year"] = { $gte: start_year };
-            matchStage["content.end_year"] = { $lte: end_year };
-        }
+        // if (start_year && end_year) {
 
-        if (categories && categories.length > 0) {
-            matchStage["content.categories"] = { $in: categories };
+        //     matchStage["content.start_year"] = { $gte: start_year };
+        //     matchStage["content.end_year"] = { $lte: end_year };
+        // }
+
+        if (category) {
+            matchStage["content.categories"] = { $in: [category] };
         }
 
         // Add the $match stage if any conditions are specified
@@ -34,23 +77,18 @@ export async function getHistoryReports({ start_year, end_year, country, categor
             pipeline.push({ $match: matchStage });
         }
 
-        var reports = Report.aggregate(pipeline);
+        var reports = await Report.aggregate(pipeline)
 
         return reports
-    } catch (error) {
-        throw new InternalError(error)
     }
-}
 
-export async function updateReportStatus({ report_id, status }) {
-    try {
-        const report = await Report.findByIdAndUpdate(report_id, { status });
+    static async deleteReport(id: string, isPopulated: boolean) {
+        const report = await Report.findByIdAndDelete(id)
 
-        if (!report)
-            throw new NotFoundError("There is no report with the specified id");
+        if (isPopulated) {
+            await report.populate("content_id")
+        }
 
-        return report;
-    } catch (error) {
-        throw new InternalError(error)
+        return report
     }
 }
