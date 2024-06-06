@@ -6,6 +6,6 @@ export class FlagRepository {
     }
 
     static async getFlags(count: number) {
-        return await FlagModel.find().limit(count);
+        return await FlagModel.aggregate([{ $sample: { size: count } }]);
     }
 }
