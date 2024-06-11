@@ -11,6 +11,10 @@ reportRouter
     .post(authenticate, permit(Role.Admin, Role.Contributor), ReportController.createReport);
 
 reportRouter
+    .route("/all/")
+    .get(authenticate, ReportController.getAllReports)
+
+reportRouter
     .route("/:id")
     .get(authenticate, permit(Role.Admin, Role.Contributor), ReportController.getReport)
     .patch(authenticate, permit(Role.Admin, Role.Contributor), ReportController.updateReport)

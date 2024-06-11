@@ -75,6 +75,36 @@ export default class ReportController {
         }
     }
 
+    static async getAllReports(req: Request, res: Response) {
+        try {
+            const { type } = req.query;
+            const country = req.query.country as string;
+            const category = req.query.category as string;
+            const start_year = req.query.start_year as string;
+            const end_year = req.query.end_year as string;
+
+            let reports
+
+            if (type == ReportType.history) {
+                reports = await ReportService.getAllHistoryReports(country as string, category as string, start_year, end_year);
+            } else if (type == ReportType.map) {
+                console.log("Report for map invoked for type ", type)
+                throw new NotFoundError(`Report for type: ${ReportType.map} is not currently supported`)
+            } else {
+                console.log("Report for map invoked for type ", type)
+                throw new NotFoundError(`Report for type: ${type} is not currently supported`)
+            }
+
+            const data = {
+                reports: reports
+            }
+
+            return new SuccessResponse('Reports retrieved successfully', data).send(res);
+        } catch (error) {
+            handleErrorResponse(error, res);
+        }
+    }
+
     static async getReport(req: Request, res: Response) {
         try {
             const id = req.params.id;

@@ -9,7 +9,7 @@ notificationRouter
     .get(authenticate, NotificationController.getNotifications);
 
 notificationRouter
-    .route("/read-all/:id")
+    .route("/read-all")
     .post(authenticate, NotificationController.readNotifications);
 
 notificationRouter

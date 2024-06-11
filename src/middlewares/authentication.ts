@@ -1,6 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import JWT from "jsonwebtoken";
 import { config } from "../../config";
+import { ForbiddenError } from "../core/ApiError";
+import { AuthFailureResponse } from "../core/ApiResponse";
+import { handleErrorResponse } from "../helpers/errorHandle";
 import { User } from "../resources/user/user.model";
 
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
@@ -24,97 +27,20 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 
     } catch (error) {
       console.log(error);
-      return res.status(500).json({ message: "Unexpected Error Occurred" });
+      return new AuthFailureResponse("Token Error Occurred").send(res);
     }
   }
-  res.status(403).json({ message: "Please login to use this service." });
+  return new AuthFailureResponse("Token Error Occurred").send(res);
 }
 
-export function permit(...allowed: string[]){
+export function permit(...allowed: string[]) {
   return (req: Request,
-  res: Response,
-  next: NextFunction) => {
+    res: Response,
+    next: NextFunction) => {
     const user = res.locals.user;
     if (user && allowed.includes(user.role)) {
       return next();
     }
-    res.status(403).json({ message: "Access Denied" });
+    handleErrorResponse(new ForbiddenError("Access Denied"), res);
   };
 }
-
-
-//  {
-//   const authHeader = req.headers["authorization"];
-//   const token = authHeader && authHeader.split(" ")[1];
-//   if (token !== null) {
-//     try {
-//       const payload = JWT.verify(token, config.jwtSecret);
-//       console.log(payload);
-//       const id = JSON.parse(JSON.stringify(payload));
-
-      
-//       return next();
-//     } catch (error) {
-//       console.log(error);
-//       res.locals = {
-//         payload: null,
-//       };
-//       return res.status(403).json({ message: "unauthorized" });
-//     }
-//   }
-//   res.status(403).json({ message: "unauthorized" });
-// }
-
-// export async function isAdmin(req, res, next) {
-//   const authHeader = req.headers["authorization"];
-//   const token = authHeader && authHeader.split(" ")[1];
-//   if (token !== null) {
-//     try {
-//       const payload = JWT.verify(token, config.jwtSecret);
-//       res.locals = JSON.parse(JSON.stringify(payload));
-//       const { _id } = res.locals;
-
-//       const user = await User.findById(_id);
-
-//       if (user.role !== "admin") {
-//         return res.status(403).json({ message: "not authorized" });
-//       }
-//       res.locals = JSON.parse(JSON.stringify(payload));
-//       return next();
-//     } catch (error) {
-//       console.log(error);
-//       res.locals = {
-//         payload: null,
-//       };
-//       return res.status(403).json({ message: "unauthorized" });
-//     }
-//   }
-//   res.status(403).json({ message: "unauthorized" });
-// }
-
-// export async function isContributor(req, res, next) {
-//   const authHeader = req.headers["authorization"];
-//   const token = authHeader && authHeader.split(" ")[1];
-//   if (token !== null) {
-//     try {
-//       const payload = JWT.verify(token, config.jwtSecret);
-//       res.locals = JSON.parse(JSON.stringify(payload));
-//       const { _id } = res.locals;
-
-//       const user = await User.findById(_id);
-
-//       if (user.role !== "contributor") {
-//         return res.status(403).json({ message: "not a contributor" });
-//       }
-//       res.locals = JSON.parse(JSON.stringify(payload));
-//       return next();
-//     } catch (error) {
-//       console.log(error);
-//       res.locals = {
-//         payload: null,
-//       };
-//       return res.status(403).json({ message: "unauthorized" });
-//     }
-//   }
-//   res.status(403).json({ message: "unauthorized" });
-// }
