@@ -27,6 +27,12 @@ export class ReportService {
         return report
     }
 
+    static async getAllHistoryReports(country: string, category: string, start_year: string, end_year: string) {
+        const report = await ReportRepository.getAllHistoryReports(country, category, start_year, end_year)
+
+        return report
+    }
+
     static async deleteReport(id: string, isPopulated: boolean = false) {
         const report = await ReportRepository.deleteReport(id, isPopulated)
         return report
