@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import NodeCache from "node-cache";
-import { Map, TempMap } from "./map.model";
+import { Geometry, Map, Properties, TempMap } from "./map.model";
 const cache = new NodeCache({
   deleteOnExpire: true,
   maxKeys: 100,
@@ -98,6 +98,70 @@ export async function getTempMap(
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export async function addMap(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { startPeriod, endPeriod, map } = req.body;
+
+    if (!startPeriod || !Number.isInteger(startPeriod)) {
+      return res.status(400).json({
+        message: "startPeriod must be a valid integer (year, can be negative)",
+      });
+    }
+
+    if (
+      endPeriod &&
+      (!Number.isInteger(endPeriod) || endPeriod < startPeriod)
+    ) {
+      return res.status(400).json({
+        message: "endPeriod must be a integer greater than startPeriod",
+      });
+    }
+    // Ensure map field exists
+    if (!map) {
+      return res.status(400).json({ message: "Missing required map field" });
+    }
+
+    // Extract properties and geometry from the map
+    const { properties, geometry } = map;
+    if (!properties.NAME) {
+      return res.status(400).json({ message: "Missing required NAME" });
+    }
+    if (!geometry.coordinates?.length) {
+      return res.status(400).json({ message: "Missing required geometry" });
+    }
+    // Save properties to the database
+    const newProperties = new Properties({
+      NAME: properties.NAME,
+      ABBREVN: properties.ABBREVN,
+      SUBJECTO: properties.SUBJECTO,
+      BORDERPRECISION: properties.BORDERPRECISION,
+      PARTOF: properties.PARTOF,
+    });
+    const savedProperties = await newProperties.save();
+
+    // Save geometry to the database
+    const newGeometry = new Geometry({
+      type: geometry.type,
+      coordinates: geometry.coordinates,
+    });
+    const savedGeometry = await newGeometry.save();
+
+    // Create and save the new map
+    const newMap = new Map({
+      type: map.type || "Feature",
+      startPeriod: startPeriod,
+      endPeriod: endPeriod,
+      properties: savedProperties._id,
+      geometry: savedGeometry._id,
+    });
+    const savedMap = await newMap.save();
+
+    return res.status(201).json(savedMap);
+  } catch (error) {
+    next(error);
   }
 }
 
