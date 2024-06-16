@@ -41,92 +41,28 @@ export class ReportRepository {
         return report
     }
 
-    static async getHistoryReports(reporter_id: string, country: string, category: string, start_year: string, end_year: string) {
+    static async getHistoryReports(reporter_id: string, country: string, category: string, start_year: string, end_year: string, type: string) {
 
-        const reports = await Report.find({ reporter_id }).populate("content_id").sort({ updatedAt: -1 });
+        const reports = await Report.find({ reporter_id, type }).populate("content_id").sort({ updatedAt: -1 });
         return reports
-
-        // const pipeline: any[] = [
-        //     {
-        //         $lookup: {
-        //             from: "histories",
-        //             localField: "content_id",
-        //             foreignField: "_id",
-        //             as: "content_id"
-        //         },
-        //     },
-        // ];
-
-        // pipeline.push({ $sort: { updatedAt: -1 } });
-
-        // const matchStage = {};
-
-        // matchStage["reporter_id"] = reporter_id;
-
-        // if (country) {
-        //     matchStage["content.country"] = country;
-        // }
-
-        // // if (start_year && end_year) {
-
-        // //     matchStage["content.start_year"] = { $gte: start_year };
-        // //     matchStage["content.end_year"] = { $lte: end_year };
-        // // }
-
-        // if (category) {
-        //     matchStage["content.categories"] = { $in: [category] };
-        // }
-
-        // // Add the $match stage if any conditions are specified
-        // if (Object.keys(matchStage).length > 0) {
-        //     pipeline.push({ $match: matchStage });
-        // }
-
-        // var reports = await Report.aggregate(pipeline)
-
-        // return reports
     }
 
-    static async getAllHistoryReports(country: string, category: string, start_year: string, end_year: string) {
+    static async getAllHistoryReports(country: string, category: string, start_year: string, end_year: string, type: string) {
 
-        const reports = await Report.find({}).populate("content_id").sort({ updatedAt: -1 });
+        const reports = await Report.find({ type }).populate("content_id").sort({ updatedAt: -1 });
         return reports
+    }
 
-        // const pipeline: any[] = [
-        //     {
-        //         $lookup: {
-        //             from: "histories",
-        //             localField: "content_id",
-        //             foreignField: "_id",
-        //             as: "content_id"
-        //         }
-        //     },
-        // ];
+    static async getMapReports(reporter_id: string, type: string) {
 
-        // const matchStage = {};
+        const reports = await Report.find({ reporter_id, type }).populate("content_id").sort({ updatedAt: -1 });
+        return reports
+    }
 
-        // if (country) {
-        //     matchStage["content.country"] = country;
-        // }
+    static async getAllMapReports(type: string) {
 
-        // // if (start_year && end_year) {
-
-        // //     matchStage["content.start_year"] = { $gte: start_year };
-        // //     matchStage["content.end_year"] = { $lte: end_year };
-        // // }
-
-        // if (category) {
-        //     matchStage["content.categories"] = { $in: [category] };
-        // }
-
-        // // Add the $match stage if any conditions are specified
-        // if (Object.keys(matchStage).length > 0) {
-        //     pipeline.push({ $match: matchStage });
-        // }
-
-        // var reports = await Report.aggregate(pipeline)
-
-        // return reports
+        const reports = await Report.find({ type }).populate("content_id").sort({ updatedAt: -1 });
+        return reports
     }
 
     static async deleteReport(id: string, isPopulated: boolean) {
