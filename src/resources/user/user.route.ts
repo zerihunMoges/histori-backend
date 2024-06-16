@@ -3,17 +3,16 @@ import { authenticate } from "../../middlewares/authentication";
 import {
   becomeContributor,
   deleteUser,
-  fetchAllUsers,
-  getUserById,
+  getUser,
   loginUser,
   registerUser,
-  updateUser,
+  updateUser
 } from "./user.controllers";
 
 const userRouter = Router();
 
-userRouter.get("/all", fetchAllUsers);
-userRouter.get("/:userId", getUserById);
+
+userRouter.get("/user", authenticate, getUser);
 userRouter.delete("/:userId", deleteUser);
 userRouter.put("/:userId", updateUser);
 userRouter.post("/login", loginUser);

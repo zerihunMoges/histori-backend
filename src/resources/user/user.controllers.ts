@@ -83,14 +83,14 @@ export const fetchAllUsers = async (
 };
 
 //get user by ID
-export const getUserById = async (
+export const getUser = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { _id } = res.locals;
-    const user = await User.findById(_id);
+    const _id = res.locals.user._id;
+    const user = await User.findById(_id, { password: 0 });
     if (user) {
       return res.status(200).json(user);
     }
