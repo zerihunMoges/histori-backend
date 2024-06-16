@@ -4,6 +4,7 @@ import { SuccessResponse } from '../../core/ApiResponse';
 import { handleErrorResponse } from '../../helpers/errorHandle';
 import { ReportStatus, ReportType } from '../../types/report';
 import { History } from '../history/history.model';
+import { Map } from '../map/map.model';
 import { ReportService } from './report.service';
 
 export default class ReportController {
@@ -24,8 +25,9 @@ export default class ReportController {
                 if (!history)
                     throw new NotFoundError("There is no history with the specified id");
             } else if (type == ReportType.map) {
-                console.log("Report for map invoked for type ", type)
-                throw new NotFoundError(`Report for type: ${ReportType.map} is not currently supported`)
+                const map = await Map.find({ _id: content_id });
+                if (!map)
+                    throw new NotFoundError("There is no map with the specified id")
             } else {
                 console.log("Report for map invoked for type ", type)
                 throw new NotFoundError(`Report for type: ${type} is not currently supported`)
@@ -56,10 +58,11 @@ export default class ReportController {
             let reports
 
             if (type == ReportType.history) {
-                reports = await ReportService.getHistoryReports(reporter_id, country as string, category as string, start_year, end_year);
+                reports = await ReportService.getHistoryReports(reporter_id, country as string, category as string, start_year, end_year, type);
             } else if (type == ReportType.map) {
-                console.log("Report for map invoked for type ", type)
-                throw new NotFoundError(`Report for type: ${ReportType.map} is not currently supported`)
+                reports = await ReportService.getMapReports(reporter_id, type);
+                // console.log("Report for map invoked for type ", type)
+                // throw new NotFoundError(`Report for type: ${ReportType.map} is not currently supported`)
             } else {
                 console.log("Report for map invoked for type ", type)
                 throw new NotFoundError(`Report for type: ${type} is not currently supported`)
@@ -86,10 +89,11 @@ export default class ReportController {
             let reports
 
             if (type == ReportType.history) {
-                reports = await ReportService.getAllHistoryReports(country as string, category as string, start_year, end_year);
+                reports = await ReportService.getAllHistoryReports(country as string, category as string, start_year, end_year, type);
             } else if (type == ReportType.map) {
-                console.log("Report for map invoked for type ", type)
-                throw new NotFoundError(`Report for type: ${ReportType.map} is not currently supported`)
+                reports = await ReportService.getAllMapReports(type);
+                // console.log("Report for map invoked for type ", type)
+                // throw new NotFoundError(`Report for type: ${ReportType.map} is not currently supported`)
             } else {
                 console.log("Report for map invoked for type ", type)
                 throw new NotFoundError(`Report for type: ${type} is not currently supported`)
