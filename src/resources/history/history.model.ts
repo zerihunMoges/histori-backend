@@ -6,6 +6,7 @@ export interface IHistory {
   country: string;
   start_year: number;
   end_year: number;
+  image: string;
   content: string;
   categories: string[];
   sources: string[];
@@ -26,6 +27,9 @@ const HistorySchema = new mongoose.Schema({
   },
   end_year: {
     type: Number,
+  },
+  image: {
+    type: String,
   },
   content: {
     type: String,
@@ -56,6 +60,9 @@ const TempHistorySchema = new mongoose.Schema({
   },
   end_year: {
     type: Number,
+  },
+  image: {
+    type: String,
   },
   content: {
     type: String,

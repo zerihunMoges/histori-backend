@@ -43,82 +43,90 @@ export class ReportRepository {
 
     static async getHistoryReports(reporter_id: string, country: string, category: string, start_year: string, end_year: string) {
 
-        const pipeline: any[] = [
-            {
-                $lookup: {
-                    from: "histories",
-                    localField: "content_id",
-                    foreignField: "_id",
-                    as: "content_id"
-                }
-            },
-        ];
+        const reports = await Report.find({ reporter_id }).populate("content_id").sort({ updatedAt: -1 });
+        return reports
 
-        const matchStage = {};
+        // const pipeline: any[] = [
+        //     {
+        //         $lookup: {
+        //             from: "histories",
+        //             localField: "content_id",
+        //             foreignField: "_id",
+        //             as: "content_id"
+        //         },
+        //     },
+        // ];
 
-        matchStage["reporter_id"] = reporter_id;
+        // pipeline.push({ $sort: { updatedAt: -1 } });
 
-        if (country) {
-            matchStage["content.country"] = country;
-        }
+        // const matchStage = {};
 
-        // if (start_year && end_year) {
+        // matchStage["reporter_id"] = reporter_id;
 
-        //     matchStage["content.start_year"] = { $gte: start_year };
-        //     matchStage["content.end_year"] = { $lte: end_year };
+        // if (country) {
+        //     matchStage["content.country"] = country;
         // }
 
-        if (category) {
-            matchStage["content.categories"] = { $in: [category] };
-        }
+        // // if (start_year && end_year) {
 
-        // Add the $match stage if any conditions are specified
-        if (Object.keys(matchStage).length > 0) {
-            pipeline.push({ $match: matchStage });
-        }
+        // //     matchStage["content.start_year"] = { $gte: start_year };
+        // //     matchStage["content.end_year"] = { $lte: end_year };
+        // // }
 
-        var reports = await Report.aggregate(pipeline)
+        // if (category) {
+        //     matchStage["content.categories"] = { $in: [category] };
+        // }
 
-        return reports
+        // // Add the $match stage if any conditions are specified
+        // if (Object.keys(matchStage).length > 0) {
+        //     pipeline.push({ $match: matchStage });
+        // }
+
+        // var reports = await Report.aggregate(pipeline)
+
+        // return reports
     }
 
     static async getAllHistoryReports(country: string, category: string, start_year: string, end_year: string) {
 
-        const pipeline: any[] = [
-            {
-                $lookup: {
-                    from: "histories",
-                    localField: "content_id",
-                    foreignField: "_id",
-                    as: "content_id"
-                }
-            },
-        ];
+        const reports = await Report.find({}).populate("content_id").sort({ updatedAt: -1 });
+        return reports
 
-        const matchStage = {};
+        // const pipeline: any[] = [
+        //     {
+        //         $lookup: {
+        //             from: "histories",
+        //             localField: "content_id",
+        //             foreignField: "_id",
+        //             as: "content_id"
+        //         }
+        //     },
+        // ];
 
-        if (country) {
-            matchStage["content.country"] = country;
-        }
+        // const matchStage = {};
 
-        // if (start_year && end_year) {
-
-        //     matchStage["content.start_year"] = { $gte: start_year };
-        //     matchStage["content.end_year"] = { $lte: end_year };
+        // if (country) {
+        //     matchStage["content.country"] = country;
         // }
 
-        if (category) {
-            matchStage["content.categories"] = { $in: [category] };
-        }
+        // // if (start_year && end_year) {
 
-        // Add the $match stage if any conditions are specified
-        if (Object.keys(matchStage).length > 0) {
-            pipeline.push({ $match: matchStage });
-        }
+        // //     matchStage["content.start_year"] = { $gte: start_year };
+        // //     matchStage["content.end_year"] = { $lte: end_year };
+        // // }
 
-        var reports = await Report.aggregate(pipeline)
+        // if (category) {
+        //     matchStage["content.categories"] = { $in: [category] };
+        // }
 
-        return reports
+        // // Add the $match stage if any conditions are specified
+        // if (Object.keys(matchStage).length > 0) {
+        //     pipeline.push({ $match: matchStage });
+        // }
+
+        // var reports = await Report.aggregate(pipeline)
+
+        // return reports
     }
 
     static async deleteReport(id: string, isPopulated: boolean) {
