@@ -62,7 +62,7 @@ export async function createReviewRepo({ report_id, reviewer_id }) {
 
 export async function getReviewsByTypeRepo({ reviewer_id, type }) {
     try {
-        const reviews = await Review.find({ reviewer: reviewer_id, type });
+        const reviews = await Review.find({ reviewer: reviewer_id, type }).sort({ updatedAt: -1 });
 
         for (const review of reviews) {
             await populateReview({ review, type: review.type });
