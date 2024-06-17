@@ -241,7 +241,7 @@ export async function updateMap(
     const savedGeometry = await newGeometry.save();
 
     // Create and save the new map
-    const savedMap = Map.findByIdAndUpdate(
+    const savedMap = await Map.findByIdAndUpdate(
       id,
       {
         type: map.type || "Feature",
