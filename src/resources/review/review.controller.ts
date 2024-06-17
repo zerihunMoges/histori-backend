@@ -135,13 +135,14 @@ export async function saveHistoryReview(req: Request,
         const reviewer_id = res.locals.user._id;
         const _id = req.params._id;
 
-        let {
+        const {
             changes,
             title,
             country,
             start_year,
             end_year,
             content,
+            image_url,
             categories,
             sources
         } = req.body;
@@ -152,7 +153,7 @@ export async function saveHistoryReview(req: Request,
         if (review.reviewer.toString() !== reviewer_id.toString())
             throw new ForbiddenError("You are not authorized to view this review");
 
-        const updatedReview = await saveHistoryReviewRepo({ user_id: reviewer_id, _id, changes, title, country, start_year, end_year, content, categories, sources });
+        const updatedReview = await saveHistoryReviewRepo({ user_id: reviewer_id, _id, changes, title, country, start_year, end_year, content, categories, sources, image_url });
 
         return new SuccessResponse("Review Actions performed successfully", updatedReview).send(res);
     } catch (error) {
@@ -167,13 +168,14 @@ export async function submitHistoryReview(req: Request,
         const reviewer_id = res.locals.user._id;
         const _id = req.params._id;
 
-        let {
+        const {
             changes,
             title,
             country,
             start_year,
             end_year,
             content,
+            image_url,
             categories,
             sources
         } = req.body;
@@ -185,7 +187,7 @@ export async function submitHistoryReview(req: Request,
             throw new ForbiddenError("You are not authorized to view this review");
 
         const points = UserService.addPoints(reviewer_id, PointType.review);
-        const reviewUpdate = submitHistoryReviewRepo({ user_id: reviewer_id, _id, changes, title, country, start_year, end_year, content, categories, sources });
+        const reviewUpdate = submitHistoryReviewRepo({ user_id: reviewer_id, _id, changes, title, country, start_year, end_year, content, categories, sources, image_url });
         const reviewer_notification = NotificationService.createNotification(reviewer_id, `${PointType.review} points have been added to your account for successfully completing a review`, NotificationContentType.review, _id);
 
         const [updatedReview, _] = await Promise.all([reviewUpdate, points, reviewer_notification])
