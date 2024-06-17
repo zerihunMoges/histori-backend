@@ -18,10 +18,7 @@ export async function populateReview({ review, type }) {
         await review.populate("content_id temp_history_id");
     } else if (type === ReportType.map) {
         await review.populate({
-            path: "content_id",
-            populate: {
-                path: "properties geometry"
-            }
+            path: "content_id"
         });
     }
 }
@@ -123,16 +120,17 @@ export async function saveHistoryReviewRepo({
     end_year,
     content,
     categories,
-    sources }) {
+    sources,
+    image_url }) {
     try {
         const temp_history_exists = await getTempHistoryRepo({ _id: user_id });
 
         let temp_history;
 
         if (!temp_history_exists) {
-            temp_history = await createTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources });
+            temp_history = await createTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources, image_url });
         } else {
-            temp_history = await updateTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources });
+            temp_history = await updateTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources, image_url });
         }
 
         const saved_review = await Review.findByIdAndUpdate(_id, { changes, temp_history_id: temp_history._id }, { new: true });
@@ -155,22 +153,23 @@ export async function submitHistoryReviewRepo({
     end_year,
     content,
     categories,
-    sources }) {
+    sources,
+    image_url }) {
     try {
         const temp_history_exists = await getTempHistoryRepo({ _id: user_id });
 
         let temp_history;
 
         if (!temp_history_exists) {
-            temp_history = await createTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources });
+            temp_history = await createTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources, image_url });
         } else {
-            temp_history = await updateTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources });
+            temp_history = await updateTempHistoryRepo({ _id: user_id, title, country, start_year, end_year, content, categories, sources, image_url });
         }
 
         const review = await Review.findByIdAndUpdate(_id, { changes, temp_history_id: temp_history._id, status: ReviewStatus.approved }, { new: true })
         const deletedHistoryTask = deleteTempHistoryRepo({ _id: user_id });
         const updatedReportTask = ReportService.updateReportStatus(review.report.toString(), ReportStatus.closed);
-        const updatedHistoryTask = updateHistoryRepo({ _id, title: temp_history.title, country: temp_history.country, start_year: temp_history.start_year, end_year: temp_history.end_year, content: temp_history.content, categories: temp_history.categories, sources: temp_history.sources });
+        const updatedHistoryTask = updateHistoryRepo({ _id, title: temp_history.title, country: temp_history.country, start_year: temp_history.start_year, end_year: temp_history.end_year, content: temp_history.content, categories: temp_history.categories, sources: temp_history.sources, image_url: temp_history.image_url });
 
 
         const [_, updatedReport, __] = await Promise.all([deletedHistoryTask, updatedReportTask, updatedHistoryTask]);

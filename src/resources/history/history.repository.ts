@@ -8,7 +8,8 @@ export async function createTempHistoryRepo({
     end_year,
     content,
     categories,
-    sources }) {
+    sources,
+    image_url }) {
     try {
         const tempHistory = new TempHistory({
             _id,
@@ -19,6 +20,7 @@ export async function createTempHistoryRepo({
             content,
             categories,
             sources,
+            image: image_url
         });
 
         await tempHistory.save();
@@ -37,7 +39,8 @@ export async function updateTempHistoryRepo({
     end_year,
     content,
     categories,
-    sources }) {
+    sources,
+    image_url }) {
     try {
         const tempHistory = await TempHistory.findByIdAndUpdate(_id, {
             title,
@@ -46,7 +49,8 @@ export async function updateTempHistoryRepo({
             end_year,
             content,
             categories,
-            sources
+            sources,
+            image: image_url
         });
 
         return tempHistory;
@@ -83,7 +87,8 @@ export async function updateHistoryRepo({
     end_year,
     content,
     categories,
-    sources }) {
+    sources,
+    image_url }) {
     try {
         const tempHistory = await History.findByIdAndUpdate(_id, {
             title,
@@ -92,7 +97,8 @@ export async function updateHistoryRepo({
             end_year,
             content,
             categories,
-            sources
+            sources,
+            image: image_url
         });
 
         return tempHistory;
