@@ -59,6 +59,25 @@ export async function getMap(req, res, next) {
   }
 }
 
+// Express route handler
+export async function getMapById(req, res, next) {
+  const id = req.params.id;
+
+  try {
+    const mapData = await Map.findById(id)
+      .populate("properties")
+      .populate("geometry");
+    if (!mapData) {
+      return res.status(404).json({ message: "Map not found" });
+    }
+
+    return res.status(200).json(mapData);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
 export async function getTempMap(
   req: Request,
   res: Response,
@@ -158,6 +177,85 @@ export async function addMap(req: Request, res: Response, next: NextFunction) {
       geometry: savedGeometry._id,
     });
     const savedMap = await newMap.save();
+
+    return res.status(201).json(savedMap);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateMap(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id, startPeriod, endPeriod, map } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: "Missing required id field" });
+    }
+
+    if (!startPeriod || !Number.isInteger(startPeriod)) {
+      return res.status(400).json({
+        message: "startPeriod must be a valid integer (year, can be negative)",
+      });
+    }
+
+    if (
+      endPeriod &&
+      (!Number.isInteger(endPeriod) || endPeriod < startPeriod)
+    ) {
+      return res.status(400).json({
+        message: "endPeriod must be a integer greater than startPeriod",
+      });
+    }
+    // Ensure map field exists
+    if (!map) {
+      return res.status(400).json({ message: "Missing required map field" });
+    }
+
+    // Extract properties and geometry from the map
+    const { properties, geometry } = map;
+    if (!properties.NAME) {
+      return res.status(400).json({ message: "Missing required NAME" });
+    }
+    if (!geometry.coordinates?.length) {
+      return res.status(400).json({ message: "Missing required geometry" });
+    }
+    // Save properties to the database
+    const newProperties = new Properties({
+      NAME: properties.NAME,
+      ABBREVN: properties.ABBREVN,
+      SUBJECTO: properties.SUBJECTO,
+      BORDERPRECISION: properties.BORDERPRECISION,
+      PARTOF: properties.PARTOF,
+    });
+    const savedProperties = await newProperties.save();
+
+    // Save geometry to the database
+    const newGeometry = new Geometry({
+      type: geometry.type,
+      coordinates: geometry.coordinates,
+    });
+    const savedGeometry = await newGeometry.save();
+
+    // Create and save the new map
+    const savedMap = Map.findByIdAndUpdate(
+      id,
+      {
+        type: map.type || "Feature",
+        startPeriod: startPeriod,
+        endPeriod: endPeriod,
+        properties: savedProperties._id,
+        geometry: savedGeometry._id,
+      },
+      { new: true }
+    );
+
+    if (!savedMap) {
+      return res.status(404).json({ message: "Map not found" });
+    }
 
     return res.status(201).json(savedMap);
   } catch (error) {
