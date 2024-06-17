@@ -18,10 +18,7 @@ export async function populateReview({ review, type }) {
         await review.populate("content_id temp_history_id");
     } else if (type === ReportType.map) {
         await review.populate({
-            path: "content_id",
-            populate: {
-                path: "properties geometry"
-            }
+            path: "content_id"
         });
     }
 }
